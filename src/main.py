@@ -2,6 +2,8 @@ import PySimpleGUI as sg
 
 from proba import *
 
+version = "0.1"
+
 width = 800
 height = 500
 fight_graph = sg.Graph(
@@ -95,7 +97,7 @@ skill_layout = [
 layout = [[sg.Column(fight_layout, key="fight"), sg.Column(skill_layout, key="skill", visible=False)]]
 
 # Create the window
-window = sg.Window("Malhya Dice Stat", layout)
+window = sg.Window(f"Malhya Dice Stat v{version}", layout)
 
 
 def draw_graph(graph, proba, at_least: bool):
