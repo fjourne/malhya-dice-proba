@@ -89,6 +89,7 @@ class Proba:
                    skill_max_roll: int,
                    skill_margin: int,
                    skill_fail_at: int,
+                   skill_continue_under: int,
                    skill_stop_at: int) -> dict[int, float]:
         roll = {}
         w_roll = self.de(skill_nb_w, skill_w)
@@ -98,7 +99,7 @@ class Proba:
                 s, f = self.level_fail(success[0], fail[0], skill_fail_at)
                 self.dict_add((s, f), roll, p1 * p2)
 
-        rolls = self._roll_skill_aux(roll, {(0, 0): 1.0}, skill_max_roll, skill_margin, skill_fail_at, skill_stop_at)
+        rolls = self._roll_skill_aux(roll, {(0, 0): 1.0}, skill_max_roll, skill_margin, skill_fail_at, skill_continue_under, skill_stop_at)
 
         result = {}
         for (success, fail), p in rolls.items():
@@ -109,6 +110,7 @@ class Proba:
                         roll_left: int,
                         skill_margin: int,
                         skill_fail_at: int,
+                        skill_continue_under: int,
                         skill_stop_at: int) -> dict[(int, int), float]:
         if roll_left == 0:
             return current
@@ -116,7 +118,10 @@ class Proba:
         cummul = {}
 
         for (s1, f1), p1 in current.items():
-            if f1 + skill_margin >= skill_fail_at or s1 >= skill_stop_at:
+            stop = f1 >= skill_fail_at
+            stop |= s1 >= skill_stop_at
+            stop |= f1 + skill_margin >= skill_fail_at and s1 >= skill_continue_under
+            if stop:
                 success = s1
                 fail = f1
                 p = p1
@@ -126,7 +131,7 @@ class Proba:
                     success, fail = self.level_fail(s1 + s2, f1 + f2, skill_fail_at)
                     p = p1 * p2
                     self.dict_add((success, fail), cummul, p)
-        return self._roll_skill_aux(roll, cummul, roll_left - 1, skill_margin, skill_fail_at, skill_stop_at)
+        return self._roll_skill_aux(roll, cummul, roll_left - 1, skill_margin, skill_fail_at, skill_continue_under, skill_stop_at)
 
     def de(self, nb_die: int, die: list) -> dict[tuple[int, ...], float]:
         dice = die.copy()
