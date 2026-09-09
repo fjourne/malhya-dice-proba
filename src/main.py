@@ -2,7 +2,7 @@ import PySimpleGUI as sg
 
 from proba import Proba
 
-version = "0.2"
+version = "0.3-SNAPSHOT"
 
 
 class MainWindow:
