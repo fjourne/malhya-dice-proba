@@ -1,0 +1,3198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A1219">
+<title>Malhya — Simulateur de dés</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Metamorphous&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nuit: #0A1219;
+    --ardoise: #14232F;
+    --carte: rgba(9,17,24,.50);
+    --carte-fort: rgba(9,17,24,.62);
+    --trait: rgba(215,177,90,.22);
+    --or: #D7B15A;
+    --or-clair: #F6E3B0;
+    --ambre: #E89A3C;
+    --aura: #79D2E0;
+    --parchemin: #EBE2CA;
+    --texte: #F1EDE4;
+    --doux: #9FAFB8;
+    --rouge: #C4422F;
+    --jaune: #E0A52A;
+    --bleu: #3C7FD1;
+    --noir: #2B2547;
+    --blanc: #E4DCC8;
+    --r: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--nuit);
+    color: var(--texte);
+    font-family: Barlow, "Segoe UI", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.35;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Décor : le paysage de la boîte ---------- */
+  .decor {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none; overflow: hidden;
+  }
+  .ciel {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      #070C12 0%,
+      #0C1824 18%,
+      #142A3A 36%,
+      #23404E 52%,
+      #45535200 58%,
+      #6A5B31 74%,
+      #4A3F17 86%,
+      #241E0A 100%);
+  }
+  .lueur {
+    position: absolute; left: 50%; bottom: 8%;
+    width: 150vw; height: 72vh; transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 100%,
+      rgba(255,203,124,.60) 0%,
+      rgba(238,146,58,.34) 24%,
+      rgba(196,88,32,.14) 46%,
+      transparent 68%);
+  }
+  .nuages {
+    position: absolute; left: -30%; right: -30%; top: 0; height: 62%;
+    opacity: .5;
+    background:
+      radial-gradient(60% 46% at 18% 34%, rgba(150,175,195,.30), transparent 62%),
+      radial-gradient(52% 38% at 46% 20%, rgba(120,150,175,.26), transparent 64%),
+      radial-gradient(64% 44% at 78% 42%, rgba(145,170,190,.24), transparent 62%);
+    filter: blur(26px);
+    animation: derive 72s ease-in-out infinite alternate;
+  }
+  .nuages.bas {
+    top: 26%; height: 46%; opacity: .42;
+    background:
+      radial-gradient(58% 40% at 30% 60%, rgba(230,175,120,.30), transparent 64%),
+      radial-gradient(50% 34% at 70% 48%, rgba(200,150,110,.26), transparent 66%);
+    animation: derive 96s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes derive {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(5vw,2vh,0) scale(1.12); }
+  }
+
+  /* ---------- Le dragon dans les nuées ---------- */
+  .dragon {
+    position: absolute; left: 50%; top: 1%;
+    width: min(1180px, 128vw); height: auto;
+    transform: translateX(-50%);
+    opacity: 0;
+    filter: drop-shadow(0 0 46px rgba(130,175,200,.35)) drop-shadow(0 24px 40px rgba(0,0,0,.6));
+    animation: dragonApparait 2.6s .15s cubic-bezier(.2,.7,.25,1) forwards,
+               dragonPlane 26s 2.7s ease-in-out infinite alternate;
+  }
+  @keyframes dragonApparait {
+    from { opacity: 0; transform: translateX(-50%) translateY(-24px) scale(.97); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+  @keyframes dragonPlane {
+    from { transform: translateX(-50%) translateY(0) rotate(0deg); }
+    to   { transform: translateX(-50%) translateY(10px) rotate(.4deg); }
+  }
+  .dragon .halo {
+    fill: url(#dragonHalo);
+  }
+  .dragon .corps { fill: #4E6976; stroke: rgba(205,224,232,.30); stroke-width: 1.1; stroke-linejoin: round; }
+  .dragon .ombre { fill: #34454F; opacity: .85; }
+  .dragon .crete { fill: none; stroke: #A9C4CE; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: .8; }
+  .dragon .oeil {
+    fill: #FFD98A;
+    transform-origin: center;
+    animation: braise 3.6s ease-in-out infinite;
+  }
+  @keyframes braise {
+    0%, 100% { opacity: .6; filter: drop-shadow(0 0 2px rgba(255,200,110,.5)); }
+    50%      { opacity: 1; filter: drop-shadow(0 0 9px rgba(255,200,110,1)); }
+  }
+
+  /* ---------- Braises en suspension ---------- */
+  .braises { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
+  .braise-part {
+    position: absolute; bottom: 2%; width: var(--s, 4px); height: var(--s, 4px);
+    border-radius: 50%; background: radial-gradient(circle, #FFF1D2 0%, #FFB35C 45%, #E8792E 72%, transparent 82%);
+    box-shadow: 0 0 6px rgba(255,170,90,.8);
+    opacity: 0;
+    animation: monte var(--dur, 14s) linear var(--retard, 0s) infinite;
+  }
+  @keyframes monte {
+    0%   { transform: translate(0,0) scale(.6); opacity: 0; }
+    8%   { opacity: .85; }
+    80%  { opacity: .5; }
+    100% { transform: translate(var(--derive, 24px), -108vh) scale(1.15); opacity: 0; }
+  }
+  .horizon { position: absolute; left: 0; right: 0; bottom: 0; height: 46vh; }
+  .horizon svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .scrim {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 90% at 50% 50%, transparent 30%, rgba(4,8,12,.55) 100%),
+      linear-gradient(180deg, rgba(4,8,12,.52) 0%, rgba(4,8,12,.30) 40%, rgba(4,8,12,.58) 100%);
+  }
+  .cadre-ecran {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(215,177,90,.16), inset 0 0 90px rgba(0,0,0,.55);
+  }
+  .cadre-ecran svg { position: absolute; width: 30px; height: 30px; opacity: .55; }
+  .cadre-ecran .hg { top: 8px; left: 8px; }
+  .cadre-ecran .hd { top: 8px; right: 8px; transform: scaleX(-1); }
+  .cadre-ecran .bg { bottom: 8px; left: 8px; transform: scaleY(-1); }
+  .cadre-ecran .bd { bottom: 8px; right: 8px; transform: scale(-1); }
+
+  .app { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 26px 18px 46px; }
+
+  /* ---------- En-tête ---------- */
+  .entete {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 18px; padding-bottom: 18px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--trait);
+  }
+  .marque { min-width: 0; }
+  .wordmark {
+    margin: 0;
+    width: clamp(232px, 42vw, 372px);
+    line-height: 0;
+  }
+  .wordmark svg {
+    display: block; width: 100%; height: auto; overflow: visible;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,.6));
+  }
+  .wordmark .mot {
+    font-family: Metamorphous, Marcellus, Georgia, serif;
+    font-size: 86px;
+  }
+  .wordmark .sous {
+    font-family: Metamorphous, Marcellus, Georgia, serif;
+    font-size: 25px; letter-spacing: .06em;
+  }
+  .wordmark .vigne {
+    stroke-dasharray: 300; stroke-dashoffset: 300;
+    animation: pousse 1.5s var(--d, .3s) cubic-bezier(.3,.85,.3,1) forwards;
+  }
+  @keyframes pousse { to { stroke-dashoffset: 0; } }
+  .wordmark .feuille {
+    opacity: 0;
+    animation: eclot .5s var(--d, 1s) ease-out forwards;
+  }
+  @keyframes eclot {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .marque p { margin: 9px 0 0; color: var(--doux); font-size: 14px; letter-spacing: .04em; }
+
+  .bascule {
+    position: relative; display: flex; padding: 4px;
+    background: rgba(0,0,0,.28); border: 1px solid var(--trait);
+    border-radius: 999px; flex: 0 0 auto;
+  }
+  .bascule .curseur {
+    position: absolute; top: 4px; left: 4px;
+    width: calc(50% - 4px); height: calc(100% - 8px);
+    border-radius: 999px;
+    background: linear-gradient(140deg, var(--or) 0%, #9C7A2C 100%);
+    box-shadow: 0 4px 16px rgba(215,177,90,.30);
+    transition: transform .38s cubic-bezier(.66,0,.24,1);
+  }
+  .bascule[data-mode="skill"] .curseur { transform: translateX(100%); }
+  .mode-button {
+    position: relative; z-index: 1; flex: 1 1 0; min-width: 118px;
+    padding: 9px 18px; background: none; border: 0; border-radius: 999px;
+    color: var(--doux); font: inherit; font-weight: 600; letter-spacing: .05em;
+    cursor: pointer; transition: color .3s ease;
+  }
+  .mode-button.active { color: #241A05; }
+
+  /* ---------- Grille ---------- */
+  .plateau { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap: 20px; align-items: start; }
+  .reglages { order: 1; min-width: 0; }
+  .resultats { order: 2; min-width: 0; position: sticky; top: 18px; }
+
+  /* ---------- Panneaux ---------- */
+  .panneau {
+    background: var(--carte); border: 1px solid var(--trait);
+    border-radius: var(--r); padding: 16px; backdrop-filter: blur(6px);
+  }
+  .panneau.hidden { display: none; }
+  .panneau.entre { animation: entree .42s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes entree {
+    from { opacity: 0; transform: translateY(10px) scale(.99); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .titre-bloc {
+    font-family: Marcellus, Georgia, serif;
+    font-size: 13px; letter-spacing: .18em; color: var(--or); margin: 0 0 12px;
+  }
+  .bandeau { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .bandeau .titre-bloc { margin: 0; }
+
+  /* ---------- Boutons de réinitialisation ---------- */
+  .raz {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px;
+    background: rgba(0,0,0,.26);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 999px;
+    color: var(--doux); font: inherit; font-size: 12.5px;
+    cursor: pointer; white-space: nowrap;
+    transition: color .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .raz:hover { color: var(--or-clair); border-color: rgba(215,177,90,.45); background: rgba(215,177,90,.10); }
+  .raz .tour { display: inline-block; font-size: 14px; line-height: 1; }
+  .raz:hover .tour { animation: tourne .5s ease; }
+  @keyframes tourne { from { transform: rotate(0); } to { transform: rotate(-360deg); } }
+  .raz--mini { padding: 4px 8px; font-size: 11.5px; }
+
+  .flash { animation: flash .7s ease; }
+  @keyframes flash {
+    0%   { box-shadow: 0 0 0 0 rgba(215,177,90,.55); }
+    100% { box-shadow: 0 0 0 14px rgba(215,177,90,0); }
+  }
+
+  /* ---------- Icônes ---------- */
+  .ico { width: 1em; height: 1em; display: inline-block; vertical-align: -.13em; flex: 0 0 auto; }
+  .i-dmg { color: #F0A63C; }
+  .i-arm { color: #9EC5F0; }
+  .i-ok  { color: #79D9A4; }
+  .i-ko  { color: #E8796A; }
+  .i-bleu { color: #5FA0E8; }
+  .i-noir { color: #9A93C4; }
+
+  /* ---------- Bonus fixes ---------- */
+  .fixes { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px,1fr)); gap: 10px; margin-bottom: 16px; }
+  .fixe, .seuil, .mini {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: rgba(0,0,0,.22); border: 1px solid rgba(255,255,255,.06); border-radius: 10px;
+  }
+  .fixe, .seuil, .mini { min-width: 0; }
+  .fixe { padding: 9px 10px; }
+  .fixe > span, .seuil > span, .mini > span {
+    display: inline-flex; align-items: center; gap: 7px;
+    flex: 1 1 auto; min-width: 0;
+    font-size: 13px; color: var(--doux);
+  }
+  .fixe > span b { color: var(--texte); font-weight: 600; }
+
+  /* ---------- Cartes de dés ---------- */
+  .cartes { display: grid; gap: 12px; }
+  .carte {
+    --c: var(--or); --sym: rgba(0,0,0,.62);
+    position: relative; padding: 13px 14px;
+    background: linear-gradient(180deg, var(--carte-fort), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.07); border-radius: var(--r);
+    overflow: hidden; transition: border-color .3s ease;
+  }
+  .carte::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--c); opacity: .85; }
+  .carte:focus-within { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
+
+  .tete { display: flex; align-items: center; gap: 12px; }
+
+  /* ---------- Le dé isométrique ---------- */
+  .des {
+    --t: 46px;
+    flex: 0 0 auto; position: relative;
+    display: flex; align-items: center;
+  }
+  .des[data-multi="1"] { --t: 38px; }
+  .de-slot {
+    display: block; position: relative;
+    z-index: var(--i, 0);
+    transform: rotate(var(--rot, 0deg));
+  }
+  .de-slot + .de-slot { margin-left: calc(var(--t) * -.46); }
+  .de-slot.arrive { animation: arrive .46s cubic-bezier(.2,1.25,.4,1) both; }
+  @keyframes arrive {
+    0%   { opacity: 0; transform: rotate(var(--rot)) translateY(-20px) scale(.66); }
+    58%  { opacity: 1; transform: rotate(var(--rot)) translateY(3px) scale(1.07); }
+    100% { opacity: 1; transform: rotate(var(--rot)) translateY(0) scale(1); }
+  }
+  .des-compte {
+    margin-left: 7px; z-index: 9;
+    padding: 2px 7px; border-radius: 999px;
+    background: linear-gradient(140deg, var(--or-clair), var(--or));
+    color: #241A05; font-size: 11px; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 2px 7px rgba(0,0,0,.55);
+  }
+  .des.aucun .de { opacity: .32; filter: grayscale(.45) drop-shadow(0 3px 5px rgba(0,0,0,.4)); }
+
+  .de {
+    display: block; width: var(--t, 46px); height: calc(var(--t, 46px) * 1.08);
+    filter: drop-shadow(0 5px 7px rgba(0,0,0,.45));
+    transform-origin: 50% 88%;
+  }
+  .de .f-haut   { fill: color-mix(in srgb, var(--c) 80%, #ffffff 20%); }
+  .de .f-gauche { fill: color-mix(in srgb, var(--c) 52%, #000000 48%); }
+  .de .f-droite { fill: color-mix(in srgb, var(--c) 76%, #000000 24%); }
+  .de .arete    { fill: none; stroke: rgba(0,0,0,.34); stroke-width: .7; stroke-linejoin: round; }
+  .de .brillance{ fill: rgba(255,255,255,.22); }
+  .de .sym      { color: var(--sym); }
+  .de .sym-cote { color: var(--sym); opacity: .30; }
+  .de.lance { animation: lancer .58s cubic-bezier(.3,.7,.4,1); }
+  @keyframes lancer {
+    0%   { transform: translateY(0) rotate(0deg) scale(1,1);
+           filter: drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
+    12%  { transform: translateY(1px) rotate(0deg) scale(1.08,.90);
+           filter: drop-shadow(0 3px 5px rgba(0,0,0,.5)); }
+    38%  { transform: translateY(-13px) rotate(-11deg) scale(.95,1.07);
+           filter: drop-shadow(0 15px 11px rgba(0,0,0,.34)); }
+    62%  { transform: translateY(-9px) rotate(7deg) scale(.98,1.03);
+           filter: drop-shadow(0 12px 10px rgba(0,0,0,.38)); }
+    80%  { transform: translateY(0) rotate(-2deg) scale(1.09,.91);
+           filter: drop-shadow(0 3px 5px rgba(0,0,0,.5)); }
+    92%  { transform: translateY(-3px) rotate(1deg) scale(.98,1.03); }
+    100% { transform: translateY(0) rotate(0deg) scale(1,1);
+           filter: drop-shadow(0 5px 7px rgba(0,0,0,.45)); }
+  }
+
+  .nom { flex: 1 1 120px; min-width: 0; }
+  .nom strong { display: block; font-family: Marcellus, Georgia, serif; font-size: 17px; letter-spacing: .04em; }
+  .nom em { display: block; font-style: normal; font-size: 12.5px; color: var(--doux); margin-top: 2px; }
+
+  /* ---------- Compteur ---------- */
+  .compteur {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 2px; padding: 3px;
+    background: rgba(0,0,0,.32); border: 1px solid rgba(255,255,255,.09); border-radius: 10px;
+  }
+  .step {
+    width: 32px; height: 32px; display: grid; place-items: center;
+    background: none; border: 0; border-radius: 8px; color: var(--doux);
+    font: inherit; font-size: 19px; line-height: 1; cursor: pointer;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+  }
+  .step:hover { background: rgba(255,255,255,.09); color: var(--texte); }
+  .step:active { transform: scale(.88); }
+  .step.refus { animation: refus .3s ease; }
+  @keyframes refus { 0%,100% { transform: translateX(0); } 30% { transform: translateX(-4px); } 65% { transform: translateX(3px); } }
+
+  input[type=number] {
+    width: 46px; padding: 4px 0; background: none; border: 0; color: var(--texte);
+    font: inherit; font-weight: 700; font-size: 17px;
+    font-variant-numeric: tabular-nums; text-align: center;
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+  input[type=number].pop { animation: pop .28s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.28); color: var(--or-clair); }
+    100% { transform: scale(1); }
+  }
+  .compteur--mini { padding: 2px; }
+  .compteur--mini .step { width: 26px; height: 26px; font-size: 16px; }
+  .compteur--mini input[type=number] { width: 34px; font-size: 14.5px; }
+
+  /* ---------- Faces du dé ---------- */
+  .faces { display: flex; gap: 5px; margin: 12px 0 0; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,.10); }
+  .face {
+    flex: 1 1 0; min-width: 0; height: 31px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    border-radius: 7px; background: rgba(0,0,0,.26);
+    border: 1px solid rgba(255,255,255,.07);
+    color: var(--doux); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .face.pleine {
+    background: color-mix(in srgb, var(--c) 26%, transparent);
+    border-color: color-mix(in srgb, var(--c) 48%, transparent);
+    color: var(--texte);
+  }
+  .face.speciale { background: rgba(215,177,90,.16); border-color: rgba(215,177,90,.50); color: var(--or-clair); }
+  .face.annule   { background: rgba(196,66,47,.22); border-color: rgba(196,66,47,.55); color: #FFB9AC; }
+
+  .special-bloc { margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(255,255,255,.06); }
+  .special-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+  .special-tete p { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; letter-spacing: .1em; color: var(--or); }
+  .special-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px,1fr)); gap: 8px; }
+  .mini { padding: 5px 6px 5px 10px; }
+  .mini > span { font-size: 12.5px; }
+
+  /* ---------- Panneau compétence ---------- */
+  .seuils { display: grid; grid-template-columns: repeat(auto-fit, minmax(212px,1fr)); gap: 10px; margin-bottom: 16px; }
+  .seuil { padding: 9px 8px 9px 11px; }
+  .seuil > span { white-space: nowrap; font-size: 12.5px; }
+  .hint { margin: 14px 0 0; font-size: 12.5px; color: var(--doux); opacity: .85; }
+  .note-cache { margin: 12px 2px 0; font-size: 12px; color: var(--doux); opacity: .7; }
+
+  /* ---------- Résultats ---------- */
+  .resultats .cadre {
+    background: var(--carte); border: 1px solid var(--trait);
+    border-radius: var(--r); padding: 16px; backdrop-filter: blur(6px);
+  }
+  .stats { display: flex; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
+  .stat { min-width: 0; }
+  .stat .val {
+    font-family: Marcellus, Georgia, serif; font-size: clamp(32px,8vw,44px); line-height: 1;
+    color: var(--or-clair); font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 24px rgba(215,177,90,.24);
+  }
+  .stat.secondaire .val { font-size: clamp(20px,5vw,26px); color: var(--aura); text-shadow: 0 0 20px rgba(99,216,230,.22); }
+  .stat .lib { margin-top: 5px; font-size: 12px; letter-spacing: .1em; color: var(--doux); }
+  .barre-outils { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+
+  .interrupteur { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; font-size: 13.5px; color: var(--doux); }
+  .interrupteur input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .piste {
+    width: 42px; height: 24px; border-radius: 999px;
+    background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.12);
+    position: relative; transition: background .3s ease, border-color .3s ease;
+  }
+  .piste::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--doux);
+    transition: transform .32s cubic-bezier(.66,0,.24,1), background .3s ease;
+  }
+  .interrupteur input:checked + .piste { background: rgba(99,216,230,.26); border-color: rgba(99,216,230,.55); }
+  .interrupteur input:checked + .piste::after { transform: translateX(18px); background: var(--aura); }
+  .interrupteur input:checked ~ .lib-int { color: var(--texte); }
+
+  .replier {
+    display: none; width: 34px; height: 34px;
+    background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.10);
+    border-radius: 9px; color: var(--doux); font-size: 15px; cursor: pointer;
+  }
+
+  .graphe-boite {
+    position: relative; margin-top: 14px; border-radius: 12px; overflow: hidden;
+    background: radial-gradient(120% 90% at 18% 8%, #F7F1E0 0%, var(--parchemin) 46%, #D8CBAA 100%);
+    box-shadow: inset 0 0 0 1px rgba(44,36,22,.16),
+                inset 0 14px 34px rgba(120,100,60,.16),
+                0 18px 40px rgba(0,0,0,.32);
+    transition: max-height .38s cubic-bezier(.66,0,.24,1), opacity .28s ease;
+    max-height: 1200px;
+  }
+  .graphe-boite::after {
+    content: ""; position: absolute; inset: 7px; pointer-events: none;
+    border: 1px solid rgba(74,58,30,.16); border-radius: 7px;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.22);
+  }
+  .resultats.replie .graphe-boite { max-height: 0; opacity: 0; margin-top: 0; }
+  canvas { display: block; width: 100%; height: 360px; position: relative; z-index: 1; }
+  .vide {
+    position: absolute; inset: 0; display: none; place-items: center; padding: 24px;
+    text-align: center; color: rgba(44,36,22,.6); font-size: 14px;
+  }
+  .graphe-boite.est-vide .vide { display: grid; }
+  .legende { margin: 11px 2px 0; font-size: 12.5px; color: var(--doux); }
+
+  :focus-visible { outline: 2px solid var(--aura); outline-offset: 2px; border-radius: 6px; }
+
+  .lever { animation: lever .6s cubic-bezier(.2,.7,.3,1) both; }
+  .lever:nth-child(1) { animation-delay: .05s; }
+  .lever:nth-child(2) { animation-delay: .12s; }
+  @keyframes lever { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+
+  /* ---------- Bouton d'aide ---------- */
+  .actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .info {
+    width: 25px; height: 25px; flex: 0 0 auto;
+    display: inline-grid; place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(215,177,90,.45);
+    background: rgba(215,177,90,.10);
+    color: var(--or-clair);
+    font-family: Marcellus, Georgia, serif; font-size: 14px; line-height: 1;
+    cursor: pointer;
+    transition: background .22s ease, transform .22s ease, border-color .22s ease;
+  }
+  .info:hover { background: rgba(215,177,90,.26); border-color: rgba(215,177,90,.75); transform: scale(1.09); }
+  .info--texte {
+    width: auto; height: auto; border-radius: 999px; padding: 5px 12px 5px 8px;
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: Barlow, system-ui, sans-serif; font-size: 12.5px; color: var(--doux);
+    margin-top: 10px;
+  }
+  .info--texte:hover { color: var(--or-clair); transform: none; }
+  .info--texte .rond {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(215,177,90,.22); color: var(--or-clair);
+    font-family: Marcellus, Georgia, serif; font-size: 11px;
+  }
+
+  /* ---------- Fiche d'explication ---------- */
+  .voile {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(7,4,18,.66);
+    backdrop-filter: blur(5px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  .voile.ouvert { opacity: 1; pointer-events: auto; }
+
+  .feuille {
+    position: fixed; z-index: 61;
+    top: 50%; left: 50%;
+    width: min(620px, calc(100vw - 40px));
+    max-height: min(82vh, 780px);
+    display: flex; flex-direction: column;
+    background: linear-gradient(170deg, #15283A 0%, #0D1926 58%, #0A131C 100%);
+    border: 1px solid rgba(215,177,90,.34);
+    border-radius: 18px;
+    box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset;
+    opacity: 0; pointer-events: none;
+    transform: translate(-50%,-46%) scale(.965);
+    transition: transform .36s cubic-bezier(.2,.8,.3,1), opacity .26s ease;
+    overflow: hidden;
+  }
+  .feuille.ouvert { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+
+  .poignee { display: none; }
+
+  .aide-tete {
+    display: flex; align-items: center; gap: 12px;
+    padding: 17px 18px 14px;
+    border-bottom: 1px solid rgba(215,177,90,.20);
+  }
+  .aide-tete h3 {
+    margin: 0; flex: 1 1 auto; min-width: 0;
+    font-family: Marcellus, Georgia, serif; font-size: 19px;
+    letter-spacing: .04em; color: var(--or-clair);
+  }
+  .aide-fermer {
+    width: 32px; height: 32px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.10);
+    border-radius: 9px; color: var(--doux); font-size: 17px; line-height: 1; cursor: pointer;
+    transition: color .2s ease, background .2s ease;
+  }
+  .aide-fermer:hover { color: var(--texte); background: rgba(255,255,255,.10); }
+
+  .aide-corps {
+    padding: 16px 18px 22px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    font-size: 14.5px;
+  }
+  .aide-corps > * { animation: monte .38s cubic-bezier(.2,.8,.3,1) both; }
+  .aide-corps > *:nth-child(2) { animation-delay: .04s; }
+  .aide-corps > *:nth-child(3) { animation-delay: .08s; }
+  .aide-corps > *:nth-child(4) { animation-delay: .12s; }
+  .aide-corps > *:nth-child(5) { animation-delay: .16s; }
+  .aide-corps > *:nth-child(n+6) { animation-delay: .2s; }
+  @keyframes monte { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .aide-corps p { margin: 0 0 12px; color: #DCD5EE; line-height: 1.55; }
+  .aide-corps p:last-child { margin-bottom: 0; }
+  .aide-corps strong { color: var(--texte); font-weight: 600; }
+  .aide-corps .faces { margin-top: 0; margin-bottom: 14px; padding-top: 0; border-top: 0; }
+
+  .aide-corps ol, .aide-corps ul { margin: 0 0 14px; padding: 0; list-style: none; counter-reset: etape; }
+  .aide-corps li {
+    position: relative; padding-left: 30px; margin-bottom: 9px;
+    color: #DCD5EE; line-height: 1.5;
+  }
+  .aide-corps ol li::before {
+    counter-increment: etape; content: counter(etape);
+    position: absolute; left: 0; top: 1px;
+    width: 20px; height: 20px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(215,177,90,.16); border: 1px solid rgba(215,177,90,.40);
+    color: var(--or-clair); font-size: 11.5px; font-weight: 600;
+  }
+  .aide-corps ul li::before {
+    content: ""; position: absolute; left: 7px; top: 9px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--or); opacity: .75;
+  }
+
+  .exemple {
+    margin: 0 0 14px;
+    padding: 13px 15px;
+    border-radius: 11px;
+    background: radial-gradient(120% 100% at 20% 0%, #F5EEDC 0%, var(--parchemin) 60%, #DBCFB0 100%);
+    color: #2C2416;
+    box-shadow: inset 0 0 0 1px rgba(44,36,22,.16), 0 8px 20px rgba(0,0,0,.28);
+    line-height: 1.55;
+  }
+  .exemple b { display: block; margin-bottom: 5px; font-size: 12px; letter-spacing: .12em; color: #7A5E20; }
+  .exemple .calc {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .aide-note {
+    margin: 0; padding: 10px 13px; border-radius: 10px;
+    background: rgba(99,216,230,.09); border: 1px solid rgba(99,216,230,.26);
+    color: #BFE9EF; font-size: 13.5px; line-height: 1.5;
+  }
+
+  @media (max-width: 700px) {
+    .feuille {
+      top: auto; bottom: 0; left: 0;
+      width: 100%; max-width: none; max-height: 88vh;
+      border-radius: 20px 20px 0 0;
+      border-bottom: 0;
+      transform: translate(0, 100%) scale(1);
+    }
+    .feuille.ouvert { transform: translate(0, 0) scale(1); }
+    .poignee {
+      display: block; width: 42px; height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,.22); margin: 9px auto 0;
+    }
+    .aide-tete { padding: 12px 16px 12px; }
+    .aide-tete h3 { font-size: 17px; }
+    .aide-corps { padding: 14px 16px calc(24px + env(safe-area-inset-bottom)); font-size: 14px; }
+  }
+
+
+  /* ---------- Sélecteur de langue ---------- */
+  .entete-droite { display: flex; flex-direction: column; align-items: flex-end; gap: 11px; flex: 0 0 auto; }
+  .langues {
+    position: relative; display: flex; padding: 3px;
+    background: rgba(0,0,0,.28); border: 1px solid var(--trait); border-radius: 999px;
+  }
+  .curseur-lang {
+    position: absolute; top: 3px; left: 3px;
+    width: calc(50% - 3px); height: calc(100% - 6px);
+    border-radius: 999px;
+    background: rgba(215,177,90,.20); border: 1px solid rgba(215,177,90,.45);
+    transition: transform .32s cubic-bezier(.66,0,.24,1);
+  }
+  .langues[data-lang="en"] .curseur-lang { transform: translateX(100%); }
+  .lang-btn {
+    position: relative; z-index: 1; min-width: 42px; padding: 5px 10px;
+    background: none; border: 0; border-radius: 999px;
+    color: var(--doux); font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .09em;
+    cursor: pointer; transition: color .25s ease;
+  }
+  .lang-btn.active { color: var(--or-clair); }
+
+  /* ---------- Bouton de lancer ---------- */
+  .lancer {
+    display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid rgba(215,177,90,.5);
+    background: linear-gradient(140deg, var(--or) 0%, #9C7A2C 100%);
+    color: #241A05; font: inherit; font-weight: 600; font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(215,177,90,.22);
+    transition: transform .2s ease, box-shadow .25s ease, filter .2s ease;
+  }
+  .lancer:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(215,177,90,.38); filter: brightness(1.06); }
+  .lancer:active { transform: translateY(0) scale(.97); }
+  .lancer .ico { width: 15px; height: 15px; }
+  .lancer--grand { padding: 12px 24px; font-size: 15px; }
+  .lancer--fantome {
+    background: rgba(0,0,0,.30); border-color: rgba(255,255,255,.14);
+    color: var(--doux); box-shadow: none;
+  }
+  .lancer--fantome:hover { color: var(--or-clair); border-color: rgba(215,177,90,.45); filter: none; }
+  .lancer[disabled] { opacity: .45; pointer-events: none; }
+  .lancer[hidden] { display: none; }
+
+  /* ---------- Table de jeu ---------- */
+  .table-voile {
+    position: fixed; inset: 0; z-index: 70;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 18%, rgba(255,225,170,.16) 0%, transparent 62%),
+      radial-gradient(ellipse at 50% 40%, #271E52 0%, #130B2B 52%, #070418 100%);
+    opacity: 0; pointer-events: none; transition: opacity .34s ease;
+  }
+  .table-voile.ouvert { opacity: 1; pointer-events: auto; }
+
+  .table-jeu {
+    position: fixed; inset: 0; z-index: 71;
+    display: flex; flex-direction: column;
+    padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+    opacity: 0; pointer-events: none;
+    transform: scale(.98);
+    transition: opacity .3s ease, transform .4s cubic-bezier(.2,.8,.3,1);
+  }
+  .table-jeu.ouvert { opacity: 1; pointer-events: auto; transform: none; }
+
+  .table-tete {
+    display: flex; align-items: center; gap: 12px;
+    max-width: 720px; width: 100%; margin: 0 auto;
+    flex: 0 0 auto;
+  }
+  .table-tete h3 {
+    margin: 0; flex: 1 1 auto;
+    font-family: Marcellus, Georgia, serif; font-size: 20px;
+    letter-spacing: .12em; color: var(--or-clair);
+  }
+
+  .table-scene {
+    flex: 1 1 auto; overflow-y: auto;
+    display: flex; flex-direction: column; justify-content: flex-start;
+    gap: 22px; padding: 18px 0 8px;
+    max-width: 720px; width: 100%; margin: 0 auto;
+    scroll-behavior: smooth;
+  }
+  /* Centrage par marges automatiques : quand le contenu déborde, rien n'est
+     rogné en haut, contrairement à justify-content: center. */
+  .table-scene > *:first-child { margin-top: auto; }
+  .table-scene > *:last-child { margin-bottom: auto; }
+  .jet-groupe { text-align: center; }
+  .jet-titre {
+    display: block; margin-bottom: 14px;
+    font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--doux);
+  }
+  .jet-des { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px 24px; }
+
+  .jet { position: relative; animation: chute .72s cubic-bezier(.22,.9,.3,1) both; }
+  .jet::after {
+    content: ""; position: absolute; left: 50%; bottom: -13px;
+    width: 76%; height: 9px; transform: translateX(-50%);
+    border-radius: 50%; background: rgba(0,0,0,.55); filter: blur(5px);
+    animation: ombreJet .72s cubic-bezier(.22,.9,.3,1) both;
+  }
+  @keyframes chute {
+    0%   { opacity: 0; transform: translateY(-110px) scale(.55); }
+    55%  { opacity: 1; transform: translateY(9px) scale(1.05); }
+    78%  { transform: translateY(-5px) scale(.99); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  @keyframes ombreJet {
+    0%   { opacity: 0; transform: translateX(-50%) scaleX(.3); }
+    55%  { opacity: .75; transform: translateX(-50%) scaleX(1.1); }
+    100% { opacity: .55; transform: translateX(-50%) scaleX(1); }
+  }
+
+  .scene3d { --d: 62px; width: var(--d); height: var(--d); perspective: 420px; }
+  .cube3d {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    /* Les deux premières rotations sont l'angle de vue, les deux suivantes
+       le tirage. Garder la même liste de fonctions au départ et à l'arrivée
+       permet au navigateur d'interpoler chaque rotation séparément, donc de
+       faire réellement tourner le dé plusieurs fois. */
+    transform: rotateX(-52deg) rotateY(-24deg) rotateX(0deg) rotateY(0deg);
+    transition: transform 1.55s cubic-bezier(.13,.82,.2,1);
+  }
+  .f3d {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+    border-radius: 10px;
+    background: linear-gradient(152deg,
+      color-mix(in srgb, var(--c) 86%, #ffffff 14%),
+      color-mix(in srgb, var(--c) 64%, #000000 36%));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.42), inset 0 2px 0 rgba(255,255,255,.30);
+    color: var(--sym);
+    font-weight: 700; font-size: calc(var(--d) * .30);
+    font-variant-numeric: tabular-nums;
+  }
+  .f3d .ico { width: calc(var(--d) * .30); height: calc(var(--d) * .30); }
+  .f3d.v1 { transform: translateZ(calc(var(--d) / 2)); }
+  .f3d.v2 { transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); }
+  .f3d.v3 { transform: rotateY(90deg)  translateZ(calc(var(--d) / 2)); }
+  .f3d.v4 { transform: rotateY(-90deg) translateZ(calc(var(--d) / 2)); }
+  .f3d.v5 { transform: rotateX(90deg)  translateZ(calc(var(--d) / 2)); }
+  .f3d.v6 { transform: rotateX(-90deg) translateZ(calc(var(--d) / 2)); }
+
+  .jet.pose .scene3d { animation: pose .5s cubic-bezier(.3,1.4,.5,1); }
+  @keyframes pose {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.09) translateY(-3px); }
+    100% { transform: scale(1); }
+  }
+  .jet.eteint { opacity: .34; filter: grayscale(.55); }
+
+  /* ---------- Bilan ---------- */
+  .table-bilan { flex: 0 0 auto; max-width: 720px; width: 100%; margin: 0 auto; }
+  .bilan {
+    padding: 15px 18px; border-radius: 14px;
+    background: radial-gradient(130% 110% at 18% 0%, #F6EFDD 0%, var(--parchemin) 55%, #D8CBAA 100%);
+    color: #2C2416;
+    box-shadow: inset 0 0 0 1px rgba(44,36,22,.16), 0 16px 40px rgba(0,0,0,.45);
+    animation: monte .45s cubic-bezier(.2,.8,.3,1) both;
+  }
+  .bilan-ligne {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+    padding: 5px 0; font-size: 14.5px;
+  }
+  .bilan-ligne + .bilan-ligne { border-top: 1px dashed rgba(44,36,22,.22); }
+  .bilan-ligne span { color: rgba(44,36,22,.72); }
+  .bilan-ligne b { font-variant-numeric: tabular-nums; font-size: 16px; }
+  .bilan-total {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    margin-top: 11px; padding-top: 12px; border-top: 2px solid rgba(44,36,22,.28);
+  }
+  .bilan-total span { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #7A5E20; }
+  .bilan-total b {
+    font-family: Marcellus, Georgia, serif; font-size: 44px; line-height: 1;
+    color: #7E1F16; font-variant-numeric: tabular-nums;
+  }
+  .bilan.reussi .bilan-total b { color: #175B66; }
+  .bilan-fanfare { animation: fanfare .6s cubic-bezier(.3,1.5,.4,1); }
+  @keyframes fanfare {
+    0% { transform: scale(.6); opacity: 0; }
+    60% { transform: scale(1.14); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .bandeau-esquive {
+    margin-bottom: 11px; padding: 9px 13px; border-radius: 10px; text-align: center;
+    background: rgba(196,66,47,.16); border: 1px solid rgba(160,50,34,.45);
+    color: #8C2318; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 13px;
+  }
+  .jet-note { margin: 10px 0 0; text-align: center; font-size: 13px; color: var(--doux); }
+
+  .table-pied {
+    flex: 0 0 auto; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center; gap: 10px; padding-top: 14px;
+  }
+
+  @media (max-width: 700px) {
+    .table-scene { gap: 16px; padding: 12px 0 4px; }
+    .jet-des { gap: 16px 18px; }
+    .scene3d { --d: 52px; }
+    .bilan-total b { font-size: 36px; }
+  }
+
+  @media (max-width: 900px) {
+    .app { padding: 18px 12px 40px; }
+    .plateau { grid-template-columns: 1fr; gap: 14px; }
+    .reglages { order: 2; }
+    .resultats {
+      order: 1; position: sticky; top: 0; z-index: 20;
+      margin: -18px -12px 0; padding: 12px;
+      background: linear-gradient(180deg, rgba(8,15,21,.94) 72%, rgba(8,15,21,.78));
+      backdrop-filter: blur(10px);
+    }
+    .resultats .cadre { padding: 12px; }
+    .stat .val { font-size: clamp(26px,7vw,34px); }
+    .stat.secondaire .val { font-size: clamp(17px,4.4vw,21px); }
+    .stat .lib { font-size: 11px; margin-top: 3px; }
+    .barre-outils { margin-top: 2px; }
+    .interrupteur { font-size: 12.5px; gap: 7px; }
+    .legende { font-size: 11.5px; margin-top: 8px; }
+    .replier { display: grid; place-items: center; }
+    .entete { padding-bottom: 14px; margin-bottom: 14px; }
+    .bascule { width: 100%; }
+    .entete-droite { width: 100%; align-items: stretch; }
+    .langues { align-self: flex-end; }
+    .faces { gap: 4px; }
+    .face { font-size: 12px; height: 29px; }
+    .des { --t: 42px; }
+    .des[data-multi="1"] { --t: 34px; }
+  }
+
+  @media (max-width: 460px) {
+    .tete { flex-wrap: wrap; }
+    .compteur { margin-left: auto; }
+    .special-grille { grid-template-columns: 1fr; }
+    .mini { padding-left: 8px; }
+    .mini > span { font-size: 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-dmg" viewBox="0 0 100 100">
+      <polygon fill="currentColor" points="50,0 61,31 91,17 77,47 100,50 77,53 91,83 61,69 50,100 39,69 9,83 23,53 0,50 23,47 9,17 39,31"/>
+    </symbol>
+    <symbol id="i-arm" viewBox="0 0 100 100">
+      <path fill="currentColor" d="M50 3 L89 19 V49 C89 74 71 91 50 97 C29 91 11 74 11 49 V19 Z"/>
+    </symbol>
+    <symbol id="i-ok" viewBox="0 0 100 100">
+      <path fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" d="M12 53 L38 79 L88 21"/>
+    </symbol>
+    <symbol id="i-ko" viewBox="0 0 100 100">
+      <path fill="none" stroke="currentColor" stroke-width="15" stroke-linecap="round" d="M20 20 L80 80 M80 20 L20 80"/>
+    </symbol>
+    <symbol id="i-star" viewBox="0 0 100 100">
+      <polygon fill="currentColor" points="50,2 62,36 98,38 69,60 80,95 50,74 20,95 31,60 2,38 38,36"/>
+    </symbol>
+    <symbol id="i-esq" viewBox="0 0 100 100">
+      <path fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" d="M24 16 L58 50 L24 84 M62 16 L96 50 L62 84"/>
+    </symbol>
+    <symbol id="i-vide" viewBox="0 0 100 100">
+      <path fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" d="M22 50 H78"/>
+    </symbol>
+    <symbol id="i-cube" viewBox="0 0 100 100">
+      <path fill="currentColor" d="M50 6 L92 30 L50 54 L8 30 Z" opacity=".95"/>
+      <path fill="currentColor" d="M8 36 L50 60 V94 L8 70 Z" opacity=".6"/>
+      <path fill="currentColor" d="M92 36 L50 60 V94 L92 70 Z" opacity=".78"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="decor" aria-hidden="true">
+  <div class="ciel"></div>
+  <svg class="dragon" viewBox="0 0 1180 420" preserveAspectRatio="xMidYMin meet">
+    <defs>
+      <radialGradient id="dragonHalo" cx="50%" cy="45%" r="55%">
+        <stop offset="0" stop-color="#BFE0EC" stop-opacity=".38"/>
+        <stop offset=".55" stop-color="#7FA8BA" stop-opacity=".14"/>
+        <stop offset="1" stop-color="#7FA8BA" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <ellipse class="halo" cx="590" cy="150" rx="560" ry="220"/>
+    <path class="ombre" opacity=".5" d="M40,210 C130,120 210,70 300,86 C330,44 380,10 430,26 C420,58 404,80 386,96 C452,72 520,74 566,108 C560,60 590,18 636,4 C648,46 646,88 626,122 C700,96 780,108 828,150 C862,118 906,104 944,116 C932,140 912,158 888,168 C960,176 1040,168 1100,184 C1050,206 984,214 928,204 C960,236 974,278 962,318 C920,286 892,246 884,204 C842,212 800,206 766,186 C748,218 718,240 684,246 C692,212 704,182 722,160 C664,158 610,140 570,110 C548,146 512,168 472,172 C486,140 508,114 536,96 C468,98 404,88 350,64 C336,96 312,120 282,132 C288,102 302,76 322,54 C244,58 168,92 106,150 C88,168 66,188 40,210 Z"/>
+    <path class="corps" d="M52,206 C138,124 214,78 300,92 C332,48 382,14 432,30 C422,60 406,82 388,98 C454,76 522,78 568,112 C562,62 592,20 638,6 C650,48 648,90 628,124 C702,98 782,110 830,152 C864,120 908,106 946,118 C934,142 914,160 890,170 C962,178 1042,170 1102,186 C1052,208 986,216 930,206 C962,238 976,280 964,320 C922,288 894,248 886,206 C844,214 802,208 768,188 C750,220 720,242 686,248 C694,214 706,184 724,162 C666,160 612,142 572,112 C550,148 514,170 474,174 C488,142 510,116 538,98 C470,100 406,90 352,66 C338,98 314,122 284,134 C290,104 304,78 324,56 C246,60 170,94 108,152 C92,170 72,188 52,206 Z"/>
+    <path class="crete" d="M320,58 C344,30 380,14 412,18 C398,36 378,50 356,58 C384,42 418,36 448,44 C432,60 410,70 386,72 C414,60 446,58 474,68 C456,82 432,88 408,86 C596,150 786,158 962,132 C940,150 912,162 882,168 C910,180 940,186 970,186 C944,198 914,204 884,202 M120,168 C150,142 186,124 224,120 C204,140 178,154 150,160 C178,148 210,144 240,150 C220,166 194,174 168,174"/>
+    <g class="oeil"><circle cx="392" cy="72" r="4.4"/></g>
+  </svg>
+  <div class="nuages"></div>
+  <div class="lueur"></div>
+  <div class="nuages bas"></div>
+  <div class="horizon">
+    <svg viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice">
+      <!-- pics lointains, côté droit -->
+      <path fill="#2F4450" opacity=".55" d="M596,178 L678,116 L722,152 L788,78 L852,150 L906,112 L986,174 L1064,128 L1126,170 L1200,138 L1200,400 L596,400 Z"/>
+      <!-- cité fortifiée sur l'horizon -->
+      <path fill="#16232B" d="M520,176 L520,152 L525,152 L525,143 L531,143 L531,152 L538,152 L538,130 L545,122 L552,130 L552,152 L566,152 L566,138 L573,130 L580,138 L580,152 L592,152 L592,146 L598,146 L598,176 Z"/>
+      <!-- colline d'or, côté gauche -->
+      <path fill="#332D13" d="M0,112 C130,134 280,166 448,178 L448,400 L0,400 Z"/>
+      <!-- la compagnie sur la crête -->
+      <g fill="#120E05">
+        <path d="M168,150 h3 v8 h-3 z"/><circle cx="169.5" cy="147" r="2.4"/>
+        <path d="M181,152 h3 v8 h-3 z"/><circle cx="182.5" cy="149" r="2.4"/>
+        <path d="M194,154 h3 v8 h-3 z"/><circle cx="195.5" cy="151" r="2.4"/>
+        <path d="M207,156 h3 v8 h-3 z"/><circle cx="208.5" cy="153" r="2.4"/>
+      </g>
+      <!-- terre proche -->
+      <path fill="#161206" d="M0,214 C210,192 430,210 648,200 C862,190 1042,208 1200,198 L1200,400 L0,400 Z"/>
+    </svg>
+  </div>
+  <div class="braises" id="braises"></div>
+  <div class="scrim"></div>
+</div>
+
+<div class="cadre-ecran" aria-hidden="true">
+  <svg class="hg" viewBox="0 0 40 40"><path d="M2,2 L2,26 M2,2 L26,2" fill="none" stroke="#D7B15A" stroke-width="1.6"/><circle cx="2" cy="2" r="3" fill="#D7B15A"/></svg>
+  <svg class="hd" viewBox="0 0 40 40"><path d="M2,2 L2,26 M2,2 L26,2" fill="none" stroke="#D7B15A" stroke-width="1.6"/><circle cx="2" cy="2" r="3" fill="#D7B15A"/></svg>
+  <svg class="bg" viewBox="0 0 40 40"><path d="M2,2 L2,26 M2,2 L26,2" fill="none" stroke="#D7B15A" stroke-width="1.6"/><circle cx="2" cy="2" r="3" fill="#D7B15A"/></svg>
+  <svg class="bd" viewBox="0 0 40 40"><path d="M2,2 L2,26 M2,2 L26,2" fill="none" stroke="#D7B15A" stroke-width="1.6"/><circle cx="2" cy="2" r="3" fill="#D7B15A"/></svg>
+</div>
+
+<div class="app">
+
+  <header class="entete lever">
+    <div class="marque">
+      <h1 class="wordmark" aria-label="Malhya — Lands of Legends">
+        <svg viewBox="0 0 480 152" role="img" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="pierre" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#FFFFFF"/>
+              <stop offset=".27" stop-color="#EAF0F3"/>
+              <stop offset=".50" stop-color="#A9BAC3"/>
+              <stop offset=".63" stop-color="#DEE7EB"/>
+              <stop offset="1" stop-color="#7F919C"/>
+            </linearGradient>
+            <linearGradient id="lierre" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#8FC44A"/>
+              <stop offset="1" stop-color="#36661F"/>
+            </linearGradient>
+            <path id="motif-lierre" d="M0 0 C5 -8 15 -10 20 -4 C15 4 5 5 0 0 Z"/>
+            <clipPath id="clipMot">
+              <text class="mot" x="240" y="96" text-anchor="middle">Malhya</text>
+            </clipPath>
+            <linearGradient id="lueurMot" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#FFF6DE" stop-opacity="0"/>
+              <stop offset=".5" stop-color="#FFF6DE" stop-opacity=".95"/>
+              <stop offset="1" stop-color="#FFF6DE" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+
+          <text class="mot" x="240" y="96" text-anchor="middle" transform="translate(0,4)"
+                paint-order="stroke" stroke="#050B11" stroke-width="15" stroke-linejoin="round"
+                fill="#050B11" opacity=".5">Malhya</text>
+          <text class="mot" x="240" y="96" text-anchor="middle"
+                paint-order="stroke" stroke="#43555F" stroke-width="7" stroke-linejoin="round"
+                fill="url(#pierre)">Malhya</text>
+          <g clip-path="url(#clipMot)" style="mix-blend-mode:overlay">
+            <rect x="-50" y="10" width="34" height="130" fill="url(#lueurMot)" transform="skewX(-18)">
+              <animateTransform attributeName="transform" type="translate" additive="sum"
+                from="-30 0" to="640 0" begin="1.9s;glintMot.end+5.4s" dur="1.9s" id="glintMot" fill="freeze"/>
+            </rect>
+          </g>
+
+          <g fill="none" stroke="url(#lierre)" stroke-width="4" stroke-linecap="round">
+            <path class="vigne" d="M102,112 C90,88 94,58 112,42 C125,31 141,34 141,45 C141,55 129,57 126,48"/>
+            <path class="vigne" style="--d:.5s" d="M96,104 C150,124 220,126 282,112 C306,106 328,112 338,124"/>
+            <path class="vigne" style="--d:.8s" d="M328,50 C350,62 358,84 347,101"/>
+          </g>
+          <g fill="url(#lierre)">
+            <use class="feuille" style="--d:.85s" href="#motif-lierre" transform="translate(104,96) rotate(192) scale(1.1)"/>
+            <use class="feuille" style="--d:.95s" href="#motif-lierre" transform="translate(97,72) rotate(148) scale(1.15)"/>
+            <use class="feuille" style="--d:1.05s" href="#motif-lierre" transform="translate(105,50) rotate(-58) scale(1.05)"/>
+            <use class="feuille" style="--d:1.15s" href="#motif-lierre" transform="translate(136,35) rotate(-14) scale(1)"/>
+            <use class="feuille" style="--d:1.25s" href="#motif-lierre" transform="translate(142,117) rotate(26) scale(1.1)"/>
+            <use class="feuille" style="--d:1.35s" href="#motif-lierre" transform="translate(202,125) rotate(6) scale(1.2)"/>
+            <use class="feuille" style="--d:1.45s" href="#motif-lierre" transform="translate(262,119) rotate(-14) scale(1.1)"/>
+            <use class="feuille" style="--d:1.55s" href="#motif-lierre" transform="translate(324,117) rotate(38) scale(1.05)"/>
+            <use class="feuille" style="--d:1.65s" href="#motif-lierre" transform="translate(338,58) rotate(-52) scale(1.05)"/>
+            <use class="feuille" style="--d:1.75s" href="#motif-lierre" transform="translate(350,92) rotate(62) scale(1)"/>
+          </g>
+
+          <text class="sous" x="240" y="136" text-anchor="middle"
+                paint-order="stroke" stroke="#050B11" stroke-width="5" stroke-linejoin="round"
+                fill="#F4F8FA">Lands of Legends</text>
+        </svg>
+      </h1>
+      <p data-t="sub">Simulateur de dés — probabilités de dégâts et de réussite</p>
+      <button class="info info--texte" data-info="global"><span class="rond">i</span> <span data-t="howto">Comment le calcul fonctionne</span></button>
+    </div>
+    <div class="entete-droite">
+      <div class="langues" id="langues" role="group" aria-label="Langue">
+        <span class="curseur-lang" aria-hidden="true"></span>
+        <button class="lang-btn active" data-lang="fr">FR</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+    <div class="bascule" id="bascule" data-mode="fight" role="tablist">
+      <span class="curseur" aria-hidden="true"></span>
+      <button id="fightBtn" class="mode-button active" role="tab" aria-selected="true" data-t="combat">Combat</button>
+      <button id="skillBtn" class="mode-button" role="tab" aria-selected="false" data-t="skill">Compétence</button>
+    </div>
+    </div>
+  </header>
+
+  <div class="plateau">
+
+    <!-- ================= RÉSULTATS ================= -->
+    <aside class="resultats lever" id="resultats">
+      <div class="cadre">
+        <div class="stats">
+          <div class="stat">
+            <div class="val" id="moyenne">0.00</div>
+            <div class="lib" id="moyenneLib">Dégâts moyens</div>
+          </div>
+          <div class="stat secondaire">
+            <div class="val" id="zero">0 %</div>
+            <div class="lib" id="zeroLib">Aucun dégât</div>
+          </div>
+          <div class="barre-outils">
+            <button class="lancer" id="lancerBtn">
+              <svg class="ico"><use href="#i-cube"/></svg>
+              <span data-t="roll">Lancer</span>
+            </button>
+            <label class="interrupteur">
+              <input id="atLeast" type="checkbox" checked>
+              <span class="piste"></span>
+              <span class="lib-int" data-t="atLeast">Au moins</span>
+            </label>
+            <button class="info" data-info="resultats" aria-label="Détail de la lecture du graphique">i</button>
+            <button class="replier" id="replier" aria-label="Replier le graphique">▾</button>
+          </div>
+        </div>
+
+        <div class="graphe-boite" id="grapheBoite">
+          <canvas id="graph"></canvas>
+          <div class="vide" data-t="vide">Ajoute au moins un dé pour voir la répartition.</div>
+        </div>
+
+        <p class="legende" id="legende">Probabilité d'infliger au moins cette valeur.</p>
+      </div>
+    </aside>
+
+    <!-- ================= RÉGLAGES ================= -->
+    <div class="reglages">
+
+      <!-- ---------- COMBAT ---------- -->
+      <section id="fightPanel" class="panneau">
+        <div class="bandeau">
+          <h2 class="titre-bloc" data-t="bonus">Bonus permanents</h2>
+          <div class="actions">
+            <button class="info" data-info="fixes" aria-label="Détail du calcul des bonus permanents">i</button>
+            <button class="raz" data-raz="#fightPanel"><span class="tour">↺</span> <span data-t="razFight">Réinitialiser le combat</span></button>
+          </div>
+        </div>
+        <div class="fixes">
+          <div class="fixe">
+            <span><svg class="ico i-dmg"><use href="#i-dmg"/></svg> <b data-t="dmg">Dégâts</b></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="flat_d" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="flat_d" type="number" inputmode="numeric" value="0" min="0">
+              <button class="step" data-target="flat_d" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+          <div class="fixe">
+            <span><svg class="ico i-arm"><use href="#i-arm"/></svg> <b data-t="pa">Perce-armure</b></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="flat_sr" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="flat_sr" type="number" inputmode="numeric" value="0" min="0">
+              <button class="step" data-target="flat_sr" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+          <div class="fixe">
+            <span><svg class="ico i-bleu"><use href="#i-cube"/></svg> <b data-t="blueRem">Dés bleus retirés</b></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="flat_blue_dr" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="flat_blue_dr" type="number" inputmode="numeric" value="0" min="0">
+              <button class="step" data-target="flat_blue_dr" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+          <div class="fixe">
+            <span><svg class="ico i-noir"><use href="#i-cube"/></svg> <b data-t="blackRem">Dés noirs retirés</b></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="flat_black_dr" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="flat_black_dr" type="number" inputmode="numeric" value="0" min="0">
+              <button class="step" data-target="flat_black_dr" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="titre-bloc" data-t="attaque">Attaque</h2>
+        <div class="cartes">
+
+          <!-- Rouge -->
+          <article class="carte" style="--c: var(--rouge); --sym: rgba(255,236,228,.92)">
+            <div class="tete">
+              <div class="des" data-de="dR" data-sym="i-dmg" aria-hidden="true"></div>
+              <div class="nom">
+                <strong data-t="nomAtt">Dé d'attaque</strong>
+                <em data-t="emAtt">Rouge — inflige des dégâts</em>
+              </div>
+              <button class="info" data-info="de-rouge" aria-label="Détail du calcul du dé d'attaque">i</button>
+              <div class="compteur">
+                <button class="step" data-target="dR" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <input id="dR" type="number" inputmode="numeric" value="1" min="0" max="3">
+                <button class="step" data-target="dR" data-delta="1" aria-label="Ajouter un dé">+</button>
+              </div>
+            </div>
+            <div class="faces">
+              <span class="face pleine">1<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine">1<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine">2<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine">2<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+            </div>
+            <div class="special-bloc">
+              <div class="special-tete">
+                <p><svg class="ico"><use href="#i-star"/></svg> <span data-t="faceSpe">Face spéciale</span></p>
+                <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
+              </div>
+              <div class="special-grille">
+                <label class="mini"><span><svg class="ico i-dmg"><use href="#i-dmg"/></svg> <span data-t="dmg">Dégâts</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_r_d" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_r_d" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_r_d" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_r_sr" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_r_sr" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_r_sr" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-bleu"><use href="#i-cube"/></svg> <span data-t="blueRem">Dés bleus retirés</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_r_blue_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_r_blue_dr" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_r_blue_dr" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-noir"><use href="#i-cube"/></svg> <span data-t="blackRem">Dés noirs retirés</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_r_black_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_r_black_dr" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_r_black_dr" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <!-- Jaune -->
+          <article class="carte" style="--c: var(--jaune); --sym: rgba(58,40,6,.78)">
+            <div class="tete">
+              <div class="des" data-de="dJ" data-sym="i-dmg" aria-hidden="true"></div>
+              <div class="nom">
+                <strong data-t="nomPui">Dé de puissance</strong>
+                <em data-t="emPui">Jaune — dégâts élevés, mais faces vides</em>
+              </div>
+              <button class="info" data-info="de-jaune" aria-label="Détail du calcul du dé de puissance">i</button>
+              <div class="compteur">
+                <button class="step" data-target="dJ" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <input id="dJ" type="number" inputmode="numeric" value="0" min="0" max="3">
+                <button class="step" data-target="dJ" data-delta="1" aria-label="Ajouter un dé">+</button>
+              </div>
+            </div>
+            <div class="faces">
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face pleine">1<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine">2<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine">3<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine">3<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+            </div>
+            <div class="special-bloc">
+              <div class="special-tete">
+                <p><svg class="ico"><use href="#i-star"/></svg> <span data-t="faceSpe">Face spéciale</span></p>
+                <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
+              </div>
+              <div class="special-grille">
+                <label class="mini"><span><svg class="ico i-dmg"><use href="#i-dmg"/></svg> <span data-t="dmg">Dégâts</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_y_d" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_y_d" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_y_d" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_y_sr" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_y_sr" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_y_sr" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-bleu"><use href="#i-cube"/></svg> <span data-t="blueRem">Dés bleus retirés</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_y_blue_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_y_blue_dr" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_y_blue_dr" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-noir"><use href="#i-cube"/></svg> <span data-t="blackRem">Dés noirs retirés</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_y_black_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_y_black_dr" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_y_black_dr" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="bandeau" style="margin-top:18px">
+          <h2 class="titre-bloc" data-t="defAdv">Défense adverse</h2>
+          <button class="info" data-info="defense-base" aria-label="Détail du calcul de la défense adverse">i</button>
+        </div>
+        <div class="fixes">
+          <div class="fixe">
+            <span><svg class="ico i-arm"><use href="#i-arm"/></svg> <b data-t="shieldBase">Bouclier de base</b></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="flat_shield" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="flat_shield" type="number" inputmode="numeric" value="0" min="0">
+              <button class="step" data-target="flat_shield" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cartes">
+
+          <!-- Bleu -->
+          <article class="carte" style="--c: var(--bleu); --sym: rgba(232,243,255,.92)">
+            <div class="tete">
+              <div class="des" data-de="dB" data-sym="i-arm" aria-hidden="true"></div>
+              <div class="nom">
+                <strong data-t="nomDef">Dé de défense</strong>
+                <em data-t="emDef">Bleu — réduit les dégâts</em>
+              </div>
+              <button class="info" data-info="de-bleu" aria-label="Détail du calcul du dé de défense">i</button>
+              <div class="compteur">
+                <button class="step" data-target="dB" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <input id="dB" type="number" inputmode="numeric" value="0" min="0" max="3">
+                <button class="step" data-target="dB" data-delta="1" aria-label="Ajouter un dé">+</button>
+              </div>
+            </div>
+            <div class="faces">
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face pleine">1<svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face pleine">1<svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face pleine">2<svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+            </div>
+            <div class="special-bloc">
+              <div class="special-tete">
+                <p><svg class="ico"><use href="#i-star"/></svg> <span data-t="faceSpe">Face spéciale</span></p>
+                <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
+              </div>
+              <div class="special-grille">
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="reduction">Réduction</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_blue_s" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_blue_s" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_blue_s" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="annulation">Annulation</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_blue_c" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_blue_c" type="number" inputmode="numeric" value="0" min="0" max="1">
+                    <button class="step" data-target="s_blue_c" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <!-- Noir -->
+          <article class="carte" style="--c: var(--noir); --sym: rgba(232,228,255,.92)">
+            <div class="tete">
+              <div class="des" data-de="dN" data-sym="i-esq" aria-hidden="true"></div>
+              <div class="nom">
+                <strong data-t="nomEsq">Dé d'esquive</strong>
+                <em data-t="emEsq">Noir — une face annule toute l'attaque</em>
+              </div>
+              <button class="info" data-info="de-noir" aria-label="Détail du calcul du dé d'esquive">i</button>
+              <div class="compteur">
+                <button class="step" data-target="dN" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <input id="dN" type="number" inputmode="numeric" value="0" min="0" max="3">
+                <button class="step" data-target="dN" data-delta="1" aria-label="Ajouter un dé">+</button>
+              </div>
+            </div>
+            <div class="faces">
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face pleine">2<svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face annule"><svg class="ico"><use href="#i-ko"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+            </div>
+            <div class="special-bloc">
+              <div class="special-tete">
+                <p><svg class="ico"><use href="#i-star"/></svg> <span data-t="faceSpe">Face spéciale</span></p>
+                <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
+              </div>
+              <div class="special-grille">
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="reduction">Réduction</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_black_s" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_black_s" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_black_s" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+                <label class="mini"><span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="annulation">Annulation</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_black_c" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_black_c" type="number" inputmode="numeric" value="0" min="0" max="1">
+                    <button class="step" data-target="s_black_c" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <p class="note-cache" data-t="cache">Tes réglages sont conservés sur cet appareil.</p>
+      </section>
+
+      <!-- ---------- COMPÉTENCE ---------- -->
+      <section id="skillPanel" class="panneau hidden">
+        <div class="bandeau">
+          <h2 class="titre-bloc" data-t="seuils">Seuils du test</h2>
+          <div class="actions">
+            <button class="info" data-info="seuils" aria-label="Détail du calcul des seuils">i</button>
+            <button class="raz" data-raz="#skillPanel"><span class="tour">↺</span> <span data-t="razSkill">Réinitialiser le test</span></button>
+          </div>
+        </div>
+        <div class="seuils">
+          <div class="seuil">
+            <span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="failAt">Échec à</span></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="sFA" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="sFA" type="number" inputmode="numeric" value="2" min="1">
+              <button class="step" data-target="sFA" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+          <div class="seuil">
+            <span><svg class="ico i-ok"><use href="#i-ok"/></svg> <span data-t="contUnder">Relancer sous</span></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="sCU" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="sCU" type="number" inputmode="numeric" value="1" min="1">
+              <button class="step" data-target="sCU" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+          <div class="seuil">
+            <span><svg class="ico i-ok"><use href="#i-ok"/></svg> <span data-t="stopAt">Arrêt à</span></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="sSA" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="sSA" type="number" inputmode="numeric" value="2" min="2">
+              <button class="step" data-target="sSA" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+          <div class="seuil">
+            <span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="marge">Marge</span></span>
+            <div class="compteur compteur--mini">
+              <button class="step" data-target="sM" data-delta="-1" aria-label="Retirer">-</button>
+              <input id="sM" type="number" inputmode="numeric" value="1" min="1" max="2">
+              <button class="step" data-target="sM" data-delta="1" aria-label="Ajouter">+</button>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="titre-bloc" data-t="desTest">Dés du test</h2>
+        <div class="cartes">
+
+          <article class="carte" style="--c: var(--blanc); --sym: rgba(44,36,22,.72)">
+            <div class="tete">
+              <div class="des" data-de="s_d_w" data-sym="i-ok" aria-hidden="true"></div>
+              <div class="nom">
+                <strong data-t="nomComp">Dé de compétence</strong>
+                <em data-t="emComp">Blanc — génère des réussites</em>
+              </div>
+              <button class="info" data-info="de-blanc" aria-label="Détail du calcul du dé de compétence">i</button>
+              <div class="compteur">
+                <button class="step" data-target="s_d_w" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <input id="s_d_w" type="number" inputmode="numeric" value="2" min="1" max="5">
+                <button class="step" data-target="s_d_w" data-delta="1" aria-label="Ajouter un dé">+</button>
+              </div>
+            </div>
+            <div class="faces">
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-ok"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-ok"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-ok"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+            </div>
+            <div class="special-bloc">
+              <div class="special-tete">
+                <p><svg class="ico"><use href="#i-star"/></svg> <span data-t="faceSpe">Face spéciale</span></p>
+                <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
+              </div>
+              <div class="special-grille">
+                <label class="mini"><span><svg class="ico i-ok"><use href="#i-ok"/></svg> <span data-t="reussites">Réussites</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_s_w" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_s_w" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_s_w" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <article class="carte" style="--c: var(--noir); --sym: rgba(232,228,255,.92)">
+            <div class="tete">
+              <div class="des" data-de="s_d_b" data-sym="i-ko" aria-hidden="true"></div>
+              <div class="nom">
+                <strong data-t="nomDiff">Dé de difficulté</strong>
+                <em data-t="emDiff">Noir — génère des échecs</em>
+              </div>
+              <button class="info" data-info="de-difficulte" aria-label="Détail du calcul du dé de difficulté">i</button>
+              <div class="compteur">
+                <button class="step" data-target="s_d_b" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <input id="s_d_b" type="number" inputmode="numeric" value="2" min="1" max="3">
+                <button class="step" data-target="s_d_b" data-delta="1" aria-label="Ajouter un dé">+</button>
+              </div>
+            </div>
+            <div class="faces">
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
+              <span class="face annule"><svg class="ico"><use href="#i-ko"/></svg></span>
+              <span class="face annule"><svg class="ico"><use href="#i-ko"/></svg></span>
+              <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
+            </div>
+            <div class="special-bloc">
+              <div class="special-tete">
+                <p><svg class="ico"><use href="#i-star"/></svg> <span data-t="faceSpe">Face spéciale</span></p>
+                <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
+              </div>
+              <div class="special-grille">
+                <label class="mini"><span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="echecs">Échecs</span></span>
+                  <div class="compteur compteur--mini">
+                    <button class="step" data-target="s_s_b" data-delta="-1" aria-label="Retirer">-</button>
+                    <input id="s_s_b" type="number" inputmode="numeric" value="0" min="0">
+                    <button class="step" data-target="s_s_b" data-delta="1" aria-label="Ajouter">+</button>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <p class="hint" data-t="hint25">Le calcul utilise jusqu'à 25 lancers de compétences.</p>
+        <p class="note-cache" data-t="cache">Tes réglages sont conservés sur cet appareil.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="voile" id="voile"></div>
+
+<div class="table-voile" id="tableVoile" aria-hidden="true"></div>
+<section class="table-jeu" id="tableJeu" role="dialog" aria-modal="true" aria-labelledby="tableTitre">
+  <div class="table-tete">
+    <h3 id="tableTitre" data-t="rollTitle">Lancer</h3>
+    <button class="aide-fermer" id="tableFermer" aria-label="Fermer">✕</button>
+  </div>
+  <div class="table-scene" id="tableScene"></div>
+  <div class="table-bilan" id="tableBilan"></div>
+  <div class="table-pied">
+    <button class="lancer lancer--grand" id="relancerBtn">
+      <svg class="ico"><use href="#i-cube"/></svg>
+      <span data-t="rollAgain">Relancer</span>
+    </button>
+    <button class="lancer lancer--fantome" id="nouveauBtn">
+      <span class="tour">↺</span>
+      <span data-t="nouveauTest">Nouveau test</span>
+    </button>
+  </div>
+</section>
+<section class="feuille" id="feuille" role="dialog" aria-modal="true" aria-labelledby="aideTitre">
+  <div class="poignee"></div>
+  <div class="aide-tete">
+    <h3 id="aideTitre"></h3>
+    <button class="aide-fermer" id="aideFermer" aria-label="Fermer">✕</button>
+  </div>
+  <div class="aide-corps" id="aideCorps"></div>
+</section>
+
+<script>
+"use strict";
+
+/* Port JavaScript direct de la logique Proba du script Python fourni. */
+
+const fight_at_empty = [0,0,0,0];
+const fight_1d = [1,0,0,0];
+const fight_2d = [2,0,0,0];
+const fight_3d = [3,0,0,0];
+
+const fight_def_empty = [0,0];
+const fight_1s = [1,0];
+const fight_2s = [2,0];
+const fight_es = [0,1];
+
+function key(a) { return a.join(","); }
+
+function add(map, k, value) {
+  map.set(k, (map.get(k) || 0) + value);
+}
+
+function vecAdd(a,b) {
+  return a.map((v,i) => v + b[i]);
+}
+
+function diceProbabilities(die) {
+  const result = new Map();
+  const p = 1 / die.length;
+  for (const face of die) add(result, key(face), p);
+  return result;
+}
+
+function de(nbDie, die) {
+  const n = die[0].length;
+  let result = new Map();
+  result.set(key(Array(n).fill(0)), 1.0);
+  const probabilities = diceProbabilities(die);
+
+  for (let i=0; i<nbDie; i++) {
+    const next = new Map();
+    for (const [k1,p1] of result) {
+      const r1 = k1.split(",").map(Number);
+      for (const [k2,p2] of probabilities) {
+        const r2 = k2.split(",").map(Number);
+        add(next, key(vecAdd(r1,r2)), p1*p2);
+      }
+    }
+    result = next;
+  }
+  return result;
+}
+
+function fightCummul(result, roll) {
+  const cummul = new Map();
+  for (const [k1,p1] of result) {
+    const r1 = k1.split(",").map(Number);
+    for (const [k2,p2] of roll) {
+      const r2 = k2.split(",").map(Number);
+      add(cummul, key(vecAdd(r1,r2)), p1*p2);
+    }
+  }
+  return cummul;
+}
+
+function dFightR(spe) {
+  return [fight_1d, fight_2d, spe];
+}
+
+function dFightY(spe) {
+  return [fight_at_empty, fight_1d, fight_2d, fight_3d, fight_3d, spe];
+}
+
+function dFightBlue(spe) {
+  return [fight_def_empty, fight_def_empty, fight_1s, fight_1s, fight_2s, spe];
+}
+
+function dFightBlack(spe) {
+  return [fight_def_empty, fight_def_empty, fight_def_empty, fight_2s, fight_es, spe];
+}
+
+function rollFight(fightFlat, fightNbR, fightR, fightNbY, fightY,
+                   fightNbBlue, fightBlue, fightNbBlack, fightBlack,
+                   fightbaseBouclier) {
+  let cumulativeDamage = new Map();
+  cumulativeDamage.set(key(fightFlat), 1.0);
+
+  cumulativeDamage = fightCummul(cumulativeDamage, de(fightNbR, fightR));
+  cumulativeDamage = fightCummul(cumulativeDamage, de(fightNbY, fightY));
+
+  const result = new Map();
+
+  for (const [damageKey, pA] of cumulativeDamage) {
+    const [damage, shieldRed, blueDiceRed, blackDiceRed] =
+      damageKey.split(",").map(Number);
+
+    let cumulativeDefense = new Map();
+    cumulativeDefense.set(key([fightbaseBouclier || 0, 0]), 1.0);
+
+    const nbBlue = fightNbBlue - blueDiceRed;
+    const nbBlack = fightNbBlack - blackDiceRed;
+
+    if (nbBlue > 0)
+      cumulativeDefense = fightCummul(cumulativeDefense, de(nbBlue, fightBlue));
+    if (nbBlack > 0)
+      cumulativeDefense = fightCummul(cumulativeDefense, de(nbBlack, fightBlack));
+
+    for (const [defKey,pD] of cumulativeDefense) {
+      const [damageRed,cancel] = defKey.split(",").map(Number);
+      const totalDamage = cancel > 0
+        ? 0
+        : Math.max(damage - Math.max(0, damageRed - shieldRed), 0);
+      add(result, String(totalDamage), pA*pD);
+    }
+  }
+
+  return new Map([...result.entries()].sort((a,b)=>Number(a[0])-Number(b[0])));
+}
+
+function dSkillW(spe) {
+  return [[0],[0],[1],[1],[1],[spe]];
+}
+function dSkillB(spe) {
+  return [[0],[0],[0],[1],[1],[spe]];
+}
+
+function levelFail(success, fail, skillFailAt) {
+  let s=success, f=fail;
+  if (fail >= skillFailAt) {
+    f=skillFailAt;
+    s=0;
+  }
+  return [s,f];
+}
+
+function rollSkill(skillNbW, skillW, skillNbB, skillB, skillMaxRoll,
+                  skillMargin, skillFailAt, skillContinueUnder, skillStopAt) {
+  const wRoll = de(skillNbW, skillW);
+  const bRoll = de(skillNbB, skillB);
+  const roll = new Map();
+
+  for (const [ks,p1] of wRoll) {
+    for (const [kf,p2] of bRoll) {
+      const [s,f] = levelFail(Number(ks.split(",")[0]), Number(kf.split(",")[0]), skillFailAt);
+      add(roll, key([s,f]), p1*p2);
+    }
+  }
+
+  let current = new Map([["0,0",1.0]]);
+
+  for (let left=skillMaxRoll; left>0; left--) {
+    const cumulative = new Map();
+
+    for (const [kc,p1] of current) {
+      const [s1,f1] = kc.split(",").map(Number);
+      let stop = f1 >= skillFailAt;
+      stop ||= s1 >= skillStopAt;
+      stop ||= f1 + skillMargin >= skillFailAt && s1 >= skillContinueUnder;
+
+      if (stop) {
+        add(cumulative, key([s1,f1]), p1);
+      } else {
+        for (const [kr,p2] of roll) {
+          const [s2,f2] = kr.split(",").map(Number);
+          const [s,f] = levelFail(s1+s2, f1+f2, skillFailAt);
+          add(cumulative, key([s,f]), p1*p2);
+        }
+      }
+    }
+    current = cumulative;
+  }
+
+  const result = new Map();
+  for (const [k,p] of current) add(result, k.split(",")[0], p);
+  return new Map([...result.entries()].sort((a,b)=>Number(a[0])-Number(b[0])));
+}
+
+function num(id) {
+  const v = document.getElementById(id).value;
+  return v === "" ? 0 : Math.max(0, parseInt(v,10) || 0);
+}
+
+function computeFight() {
+  const flat = [num("flat_d"),num("flat_sr"),num("flat_blue_dr"),num("flat_black_dr")];
+
+  const rSpe = [num("s_r_d"),num("s_r_sr"),num("s_r_blue_dr"),num("s_r_black_dr")];
+  const ySpe = [num("s_y_d"),num("s_y_sr"),num("s_y_blue_dr"),num("s_y_black_dr")];
+  const blueSpe = [num("s_blue_s"),num("s_blue_c")];
+  const blackSpe = [num("s_black_s"),num("s_black_c")];
+
+  return rollFight(
+    flat,
+    num("dR"), dFightR(rSpe),
+    num("dJ"), dFightY(ySpe),
+    num("dB"), dFightBlue(blueSpe),
+    num("dN"), dFightBlack(blackSpe),
+    num("flat_shield")
+  );
+}
+
+function computeSkill() {
+  return rollSkill(
+    num("s_d_w"), dSkillW(num("s_s_w")),
+    num("s_d_b"), dSkillB(num("s_s_b")),
+    25,
+    num("sM"), num("sFA"), num("sCU"), num("sSA")
+  );
+}
+
+/* ============================================================
+   Couche d'affichage — rendu du graphique, animations, saisie,
+   sauvegarde locale. Aucune incidence sur les calculs ci-dessus.
+   ============================================================ */
+
+const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const canvas = document.getElementById("graph");
+const ctx = canvas.getContext("2d");
+const boite = document.getElementById("grapheBoite");
+
+const PALETTE = {
+  fight: { a: "#7A1A12", b: "#E0603F", lueur: "rgba(224,96,63,.55)", marque: "#8A6420" },
+  skill: { a: "#14525E", b: "#54CBDC", lueur: "rgba(84,203,220,.55)", marque: "#2C6F78" }
+};
+
+let etatAnim = new Map();
+let cible = [];
+let depart = new Map();
+let maxCourant = 1, maxDepart = 1, maxCible = 1;
+let t0 = 0, raf = 0, balayage = 1;
+let survol = -1;
+let tonalite = "fight";
+let moyenneCourante = 0;
+
+function poser(liste) {
+  cible = liste;
+  maxCible = liste.length ? Math.max(...liste.map(x => x[1])) : 1;
+  depart = new Map(etatAnim);
+  maxDepart = maxCourant;
+
+  boite.classList.toggle("est-vide", liste.length === 0);
+
+  hCible = hauteurUtile(liste.length);
+  hDepart = hAffiche || hCible;
+
+  if (reduit || !liste.length) {
+    etatAnim = new Map(liste);
+    maxCourant = maxCible;
+    balayage = 1;
+    hAffiche = hCible;
+    dessiner();
+    return;
+  }
+
+  t0 = performance.now();
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(pas);
+}
+
+function pas(t) {
+  const k = Math.min(1, (t - t0) / 520);
+  const e = 1 - Math.pow(1 - k, 3);
+
+  const suivant = new Map();
+  for (const [v, p] of cible) {
+    const d = depart.has(v) ? depart.get(v) : 0;
+    suivant.set(v, d + (p - d) * e);
+  }
+  etatAnim = suivant;
+  maxCourant = maxDepart + (maxCible - maxDepart) * e;
+  hAffiche = hDepart + (hCible - hDepart) * e;
+  balayage = k;
+
+  dessiner();
+  if (k < 1) raf = requestAnimationFrame(pas);
+}
+
+/* Ajoute un rectangle arrondi au tracé courant (sans beginPath). */
+function cheminBarre(x, y, w, h, r) {
+  const W = Math.max(w, 0.6);
+  const rr = Math.max(0, Math.min(r, h / 2, W / 2));
+  if (ctx.roundRect) { ctx.roundRect(x, y, W, h, rr); return; }
+  ctx.moveTo(x + rr, y);
+  ctx.lineTo(x + W - rr, y);
+  ctx.quadraticCurveTo(x + W, y, x + W, y + rr);
+  ctx.lineTo(x + W, y + h - rr);
+  ctx.quadraticCurveTo(x + W, y + h, x + W - rr, y + h);
+  ctx.lineTo(x + rr, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+  ctx.lineTo(x, y + rr);
+  ctx.quadraticCurveTo(x, y, x + rr, y);
+  ctx.closePath();
+}
+
+let geometrie = { haut: 0, espace: 1 };
+
+const etroit = () => window.matchMedia("(max-width: 900px)").matches;
+
+/* En colonne étroite le graphique est collant en haut de l'écran : sa hauteur
+   reste constante, sinon il grandirait sur le champ en cours de modification. */
+function hauteurUtile(nb) {
+  if (etroit()) return Math.round(Math.max(190, Math.min(window.innerHeight * 0.34, 300)));
+  return Math.round(Math.max(170, Math.min(nb * 42 + 40, 560)));
+}
+
+let hAffiche = 0, hDepart = 0, hCible = 0;
+
+/* Remonte la vue si le bloc collant masque l'élément qu'on manipule. */
+function garderVisible(el) {
+  if (!el || !etroit()) return;
+  const zone = document.getElementById("resultats");
+  if (zone.classList.contains("replie")) return;
+  const bas = zone.getBoundingClientRect().bottom;
+  const r = el.getBoundingClientRect();
+  if (r.top < bas + 10) {
+    window.scrollBy({ top: r.top - bas - 14, behavior: reduit ? "auto" : "smooth" });
+  }
+}
+
+function dessiner() {
+  if (!hAffiche) hAffiche = hCible = hauteurUtile(cible.length);
+  canvas.style.height = Math.round(hAffiche) + "px";
+
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = rect.width, h = rect.height;
+  if (w < 2 || h < 2) return;
+
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  if (!cible.length) return;
+
+  const petit = w < 520;
+  const n = cible.length;
+  const hautT = h - 40;
+  const espace = Math.min(hautT / n, petit ? 44 : 52);
+  const police = Math.max(9, Math.min(petit ? 12 : 14, espace * 0.50));
+  ctx.font = `600 ${police}px Barlow, system-ui, sans-serif`;
+  ctx.textBaseline = "middle";
+
+  const rayon = Math.max(0, Math.min(police * 0.92 + 3, espace * 0.44));
+  const medaille = rayon >= 8.5;
+  let largeurEtiq = 0;
+  for (const [v] of cible) largeurEtiq = Math.max(largeurEtiq, ctx.measureText(String(v)).width);
+
+  const gaucheM = medaille ? Math.round(rayon * 2 + 14) : Math.ceil(largeurEtiq) + (petit ? 16 : 20);
+  const droiteM = petit ? 14 : 18;
+  const hautM = 20 + Math.max(0, (hautT - espace * n) / 2);
+  const largeurT = w - gaucheM - droiteM;
+
+  geometrie = { haut: hautM, espace };
+
+  const pal = PALETTE[tonalite];
+  const grad = ctx.createLinearGradient(gaucheM, 0, gaucheM + largeurT, 0);
+  grad.addColorStop(0, pal.a);
+  grad.addColorStop(1, pal.b);
+
+  const maxAff = Math.max(maxCourant, 1e-9);
+  const barreH = Math.max(6, Math.min(espace * 0.64, petit ? 26 : 32));
+  const arr = barreH / 2;
+
+  // --- Rails de fond ---
+  ctx.beginPath();
+  cible.forEach((_, i) => {
+    const y = hautM + (i + 0.5) * espace;
+    cheminBarre(gaucheM, y - barreH / 2, largeurT, barreH, arr);
+  });
+  ctx.fillStyle = "rgba(58,46,26,.075)";
+  ctx.fill();
+
+  // --- Barres ---
+  cible.forEach(([valeur], i) => {
+    const p = etatAnim.has(valeur) ? etatAnim.get(valeur) : 0;
+    const y = hautM + (i + 0.5) * espace;
+    const haut = y - barreH / 2;
+    const larg = Math.max(2, (p / maxAff) * largeurT);
+    const actif = i === survol;
+
+    ctx.save();
+    ctx.beginPath();
+    cheminBarre(gaucheM, haut, larg, barreH, arr);
+    ctx.shadowColor = "rgba(52,34,14,.34)";
+    ctx.shadowBlur = 7;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+
+    // Volume : reflet haut, ombre basse
+    ctx.save();
+    ctx.beginPath();
+    cheminBarre(gaucheM, haut, larg, barreH, arr);
+    ctx.clip();
+    const vol = ctx.createLinearGradient(0, haut, 0, haut + barreH);
+    vol.addColorStop(0, "rgba(255,255,255,.34)");
+    vol.addColorStop(.42, "rgba(255,255,255,.05)");
+    vol.addColorStop(.55, "rgba(0,0,0,0)");
+    vol.addColorStop(1, "rgba(0,0,0,.22)");
+    ctx.fillStyle = vol;
+    ctx.fillRect(gaucheM, haut, larg, barreH);
+    if (actif) {
+      ctx.fillStyle = "rgba(255,255,255,.16)";
+      ctx.fillRect(gaucheM, haut, larg, barreH);
+    }
+    ctx.restore();
+
+    ctx.beginPath();
+    cheminBarre(gaucheM + .5, haut + .5, larg - 1, barreH - 1, arr);
+    ctx.strokeStyle = actif ? "rgba(30,22,10,.55)" : "rgba(30,22,10,.28)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // --- Repère de moyenne ---
+  const vals = cible.map(x => x[0]);
+  if (vals.length > 1 && moyenneCourante >= vals[0] && moyenneCourante <= vals[vals.length - 1]) {
+    let idx = 0;
+    for (let i = 0; i < vals.length - 1; i++) {
+      if (moyenneCourante >= vals[i] && moyenneCourante <= vals[i + 1]) {
+        const d = vals[i + 1] - vals[i];
+        idx = i + (d ? (moyenneCourante - vals[i]) / d : 0);
+        break;
+      }
+    }
+    const ym = hautM + (idx + 0.5) * espace;
+    ctx.save();
+    ctx.strokeStyle = pal.marque;
+    ctx.globalAlpha = .55;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(gaucheM, ym);
+    ctx.lineTo(gaucheM + largeurT, ym);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = pal.marque;
+    ctx.beginPath();
+    ctx.moveTo(gaucheM - 7, ym - 5);
+    ctx.lineTo(gaucheM - 1, ym);
+    ctx.lineTo(gaucheM - 7, ym + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // --- Étiquettes ---
+  cible.forEach(([valeur, pCible], i) => {
+    const p = etatAnim.has(valeur) ? etatAnim.get(valeur) : 0;
+    const y = hautM + (i + 0.5) * espace;
+    const larg = Math.max(2, (p / maxAff) * largeurT);
+    const actif = i === survol;
+
+    if (medaille) {
+      const cx = gaucheM - rayon - 8;
+      ctx.beginPath();
+      ctx.arc(cx, y, rayon, 0, Math.PI * 2);
+      ctx.fillStyle = actif ? "rgba(58,46,26,.20)" : "rgba(58,46,26,.085)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(58,46,26,.28)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.textAlign = "center";
+      ctx.fillStyle = actif ? "#1B1409" : "rgba(44,36,22,.85)";
+      ctx.fillText(String(valeur), cx, y + .5);
+    } else {
+      ctx.textAlign = "right";
+      ctx.fillStyle = actif ? "#1B1409" : "rgba(44,36,22,.78)";
+      ctx.fillText(String(valeur), gaucheM - 8, y);
+    }
+
+    const txt = `${(pCible * 100).toFixed(2)} %`;
+    const lt = ctx.measureText(txt).width;
+    if (larg > lt + 26) {
+      ctx.textAlign = "right";
+      ctx.fillStyle = "rgba(255,246,232,.96)";
+      ctx.shadowColor = "rgba(40,20,8,.45)";
+      ctx.shadowBlur = 3;
+      ctx.fillText(txt, gaucheM + larg - 11, y);
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.textAlign = "left";
+      ctx.fillStyle = actif ? "#1B1409" : "rgba(44,36,22,.68)";
+      ctx.fillText(txt, gaucheM + larg + 9, y);
+    }
+  });
+
+  // --- Balayage lumineux pendant la mise à jour ---
+  if (balayage < 1 && !reduit) {
+    const x = gaucheM - 90 + balayage * (largeurT + 180);
+    const intensite = Math.sin(Math.PI * balayage) * .5;
+    ctx.save();
+    ctx.beginPath();
+    cible.forEach(([valeur], i) => {
+      const p = etatAnim.has(valeur) ? etatAnim.get(valeur) : 0;
+      const y = hautM + (i + 0.5) * espace;
+      cheminBarre(gaucheM, y - barreH / 2, Math.max(2, (p / maxAff) * largeurT), barreH, arr);
+    });
+    ctx.clip();
+    const g = ctx.createLinearGradient(x - 75, 0, x + 75, 0);
+    g.addColorStop(0, "rgba(255,255,255,0)");
+    g.addColorStop(.5, `rgba(255,248,225,${intensite})`);
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = g;
+    ctx.fillRect(gaucheM, 0, largeurT, h);
+    ctx.restore();
+  }
+}
+
+/* ---------- Compteur animé ---------- */
+function animerNombre(el, versValeur, suffixe, decimales) {
+  const de0 = parseFloat(el.dataset.v || "0");
+  el.dataset.v = String(versValeur);
+  if (reduit) { el.textContent = versValeur.toFixed(decimales) + suffixe; return; }
+
+  const debut = performance.now();
+  cancelAnimationFrame(Number(el.dataset.raf || 0));
+  const boucle = (t) => {
+    const k = Math.min(1, (t - debut) / 460);
+    const e = 1 - Math.pow(1 - k, 3);
+    el.textContent = (de0 + (versValeur - de0) * e).toFixed(decimales) + suffixe;
+    if (k < 1) el.dataset.raf = String(requestAnimationFrame(boucle));
+  };
+  el.dataset.raf = String(requestAnimationFrame(boucle));
+}
+
+/* ---------- Pilotage ---------- */
+let mode = "fight";
+
+function recalculate() {
+  try {
+    const result = mode === "fight" ? computeFight() : computeSkill();
+    const atLeast = document.getElementById("atLeast").checked;
+
+    const entries = [...result.entries()]
+      .map(([v, p]) => [Number(v), p])
+      .filter(([, p]) => p > 0.0001);
+
+    const shown = [];
+    let cumulative = 0;
+    let average = 0;
+
+    for (const [value, p] of entries) {
+      shown.push([value, atLeast ? 1 - cumulative : p]);
+      cumulative += p;
+      average += value * p;
+    }
+
+    tonalite = mode === "fight" ? "fight" : "skill";
+    moyenneCourante = average;
+    poser(shown);
+
+    const rien = entries.find(([v]) => v === 0);
+    animerNombre(document.getElementById("moyenne"), average, "", 2);
+    animerNombre(document.getElementById("zero"), (rien ? rien[1] : 0) * 100, " %", 1);
+
+    document.getElementById("moyenneLib").textContent = t(mode === "fight" ? "moyDmg" : "moySucc");
+    document.getElementById("zeroLib").textContent = t(mode === "fight" ? "zeroDmg" : "zeroSucc");
+    document.getElementById("legende").textContent =
+      t((atLeast ? "legAtLeast" : "legExact") + (mode === "fight" ? "F" : "S"));
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+/* ---------- Pile de dés : autant de cubes que de dés lancés ---------- */
+const DES_MAX = 5;
+const DES_ROT = [-7, 5, -3, 8];
+
+function cubeHTML(sym) {
+  return '<svg class="de" viewBox="0 0 50 54" aria-hidden="true">'
+    + '<polygon class="f-gauche" points="4,15.5 25,27 25,50 4,38.5"/>'
+    + '<polygon class="f-droite" points="46,15.5 25,27 25,50 46,38.5"/>'
+    + '<polygon class="f-haut" points="25,4 46,15.5 25,27 4,15.5"/>'
+    + '<g class="sym" transform="matrix(0.147,-0.0805,0.147,0.0805,10.3,15.5)">'
+    + '<use href="#' + sym + '" width="100" height="100"/></g>'
+    + '<g class="sym-cote" transform="matrix(0.13,0.0713,0,0.155,8.5,20.8)">'
+    + '<use href="#' + sym + '" width="100" height="100"/></g>'
+    + '<polygon class="brillance" points="25,4 46,15.5 25,27" opacity=".14"/>'
+    + '<path class="arete" d="M25,4 L46,15.5 L46,38.5 L25,50 L4,38.5 L4,15.5 Z'
+    + ' M25,27 L25,50 M25,27 L4,15.5 M25,27 L46,15.5"/>'
+    + '</svg>';
+}
+
+function dessinerDes(conteneur, nb, effet) {
+  const sym = conteneur.dataset.sym;
+  const vus = Math.min(Math.max(nb, 1), DES_MAX);
+  let html = "";
+  for (let i = 0; i < vus; i++) {
+    html += '<span class="de-slot" style="--i:' + i + ';--rot:' + DES_ROT[i % DES_ROT.length] + 'deg">'
+          + cubeHTML(sym) + '</span>';
+  }
+  if (nb > DES_MAX) html += '<span class="des-compte">×' + nb + '</span>';
+  conteneur.innerHTML = html;
+  conteneur.dataset.multi = vus > 1 ? "1" : "0";
+  conteneur.classList.toggle("aucun", nb === 0);
+
+  if (reduit || !effet) return;
+  const slots = conteneur.querySelectorAll(".de-slot");
+  if (effet === "ajout") slots[slots.length - 1].classList.add("arrive");
+  else if (effet === "retrait") slots[slots.length - 1].querySelector(".de").classList.add("lance");
+}
+
+function majDes(anime) {
+  document.querySelectorAll(".des").forEach(conteneur => {
+    const champ = document.getElementById(conteneur.dataset.de);
+    if (!champ) return;
+    const nb = Math.max(0, parseInt(champ.value, 10) || 0);
+    const avant = conteneur.dataset.n === undefined ? null : Number(conteneur.dataset.n);
+    if (avant === nb) return;
+    conteneur.dataset.n = String(nb);
+    const effet = (!anime || avant === null) ? null : (nb > avant ? "ajout" : "retrait");
+    dessinerDes(conteneur, nb, effet);
+  });
+}
+
+/* ---------- Sauvegarde locale ---------- */
+const CLE = "malhya-dice-stat/v1";
+let langueSauvee = null;
+const champs = [...document.querySelectorAll("input[type=number]")];
+const defauts = {};
+champs.forEach(el => { defauts[el.id] = el.getAttribute("value") || "0"; });
+
+let tempoSauve;
+function sauver() {
+  clearTimeout(tempoSauve);
+  tempoSauve = setTimeout(() => {
+    try {
+      const paquet = { mode, langue, atLeast: document.getElementById("atLeast").checked, v: {} };
+      champs.forEach(el => { paquet.v[el.id] = el.value; });
+      localStorage.setItem(CLE, JSON.stringify(paquet));
+    } catch (e) { /* stockage indisponible : on continue sans */ }
+  }, 220);
+}
+
+function charger() {
+  try {
+    const brut = localStorage.getItem(CLE);
+    if (!brut) return null;
+    const paquet = JSON.parse(brut);
+    if (paquet && paquet.v) {
+      champs.forEach(el => {
+        if (typeof paquet.v[el.id] === "string") el.value = paquet.v[el.id];
+      });
+    }
+    if (typeof paquet.atLeast === "boolean") document.getElementById("atLeast").checked = paquet.atLeast;
+    langueSauvee = (paquet.langue === "en") ? "en" : "fr";
+    return paquet.mode === "skill" ? "skill" : "fight";
+  } catch (e) {
+    return null;
+  }
+}
+
+/* ---------- Bascule de mode ---------- */
+function basculer(vers, silencieux) {
+  mode = vers;
+  const bascule = document.getElementById("bascule");
+  const fp = document.getElementById("fightPanel");
+  const sp = document.getElementById("skillPanel");
+  const fb = document.getElementById("fightBtn");
+  const sb = document.getElementById("skillBtn");
+  const actif = vers === "fight" ? fp : sp;
+  const inactif = vers === "fight" ? sp : fp;
+
+  bascule.dataset.mode = vers;
+  inactif.classList.add("hidden");
+  actif.classList.remove("hidden");
+  if (!silencieux) {
+    actif.classList.remove("entre");
+    void actif.offsetWidth;
+    actif.classList.add("entre");
+  }
+
+  fb.classList.toggle("active", vers === "fight");
+  sb.classList.toggle("active", vers === "skill");
+  fb.setAttribute("aria-selected", String(vers === "fight"));
+  sb.setAttribute("aria-selected", String(vers === "skill"));
+
+  recalculate();
+  majBoutonsTable();
+  if (!silencieux) sauver();
+}
+
+document.getElementById("fightBtn").addEventListener("click", () => basculer("fight"));
+document.getElementById("skillBtn").addEventListener("click", () => basculer("skill"));
+
+/* ---------- Boutons + / - ---------- */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".step");
+  if (!btn) return;
+  const input = document.getElementById(btn.dataset.target);
+  if (!input) return;
+
+  const actuel = parseInt(input.value, 10) || 0;
+  const min = parseInt(input.min, 10) || 0;
+  const max = parseInt(input.max, 10) || 20;
+  const suivant = Math.max(min, Math.min(max, actuel + Number(btn.dataset.delta)));
+  
+
+  if (suivant === actuel) {
+    btn.classList.remove("refus");
+    void btn.offsetWidth;
+    btn.classList.add("refus");
+    return;
+  }
+
+  input.value = String(suivant);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+
+  input.classList.remove("pop");
+  void input.offsetWidth;
+  input.classList.add("pop");
+
+  garderVisible(btn.closest(".carte, .fixe, .seuil, .mini") || btn);
+
+  // Un changement de nombre de dés est déjà animé par la pile ; sinon on fait
+  // rouler le dé de la carte pour signaler la modification d'une face spéciale.
+  const carte = btn.closest(".carte");
+  const pile = carte ? carte.querySelector(".des") : null;
+  if (carte && !reduit && (!pile || pile.dataset.de !== btn.dataset.target)) {
+    const de = carte.querySelector(".de");
+    if (de) { de.classList.remove("lance"); void de.offsetWidth; de.classList.add("lance"); }
+  }
+});
+
+/* ---------- Réinitialisation ---------- */
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-raz]");
+  if (!btn) return;
+  const sel = btn.dataset.raz;
+  const racine = sel.indexOf("closest:") === 0
+    ? btn.closest(sel.slice(8))
+    : document.querySelector(sel);
+  if (!racine) return;
+
+  racine.querySelectorAll("input[type=number]").forEach(el => {
+    el.value = defauts[el.id] || "0";
+  });
+
+  racine.classList.remove("flash");
+  void racine.offsetWidth;
+  racine.classList.add("flash");
+
+  majDes(false);
+  racine.querySelectorAll(".de").forEach(de => {
+    if (reduit) return;
+    de.classList.remove("lance");
+    void de.offsetWidth;
+    de.classList.add("lance");
+  });
+
+  recalculate();
+  sauver();
+});
+
+document.addEventListener("animationend", (e) => {
+  if (e.target.classList) e.target.classList.remove("pop", "lance", "refus", "flash", "arrive");
+});
+
+/* ---------- Survol du graphique ---------- */
+canvas.addEventListener("pointermove", (e) => {
+  if (e.pointerType === "touch") return;
+  const rect = canvas.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  const i = Math.floor((y - geometrie.haut) / geometrie.espace);
+  const suivant = (i >= 0 && i < cible.length) ? i : -1;
+  if (suivant !== survol) { survol = suivant; dessiner(); }
+});
+canvas.addEventListener("pointerleave", () => {
+  if (survol !== -1) { survol = -1; dessiner(); }
+});
+
+/* ---------- Repli du graphique (mobile) ---------- */
+document.getElementById("replier").addEventListener("click", (e) => {
+  const zone = document.getElementById("resultats");
+  const replie = zone.classList.toggle("replie");
+  e.currentTarget.textContent = replie ? "▸" : "▾";
+  e.currentTarget.setAttribute("aria-label", replie ? t("deplierAria") : t("replierAria"));
+  if (!replie) setTimeout(() => { hAffiche = hCible = hauteurUtile(cible.length); dessiner(); }, 400);
+});
+
+/* ---------- Entrées ---------- */
+document.getElementById("atLeast").addEventListener("change", () => { recalculate(); sauver(); });
+champs.forEach(el => {
+  el.addEventListener("input", () => { majDes(true); recalculate(); sauver(); });
+  el.addEventListener("focus", () => {
+    el.select();
+    garderVisible(el.closest(".carte, .fixe, .seuil, .mini") || el);
+  });
+});
+
+let tempoResize;
+window.addEventListener("resize", () => {
+  clearTimeout(tempoResize);
+  tempoResize = setTimeout(() => {
+    hAffiche = hCible = hauteurUtile(cible.length);
+    dessiner();
+  }, 90);
+});
+
+const skillFailAt = document.getElementById("sFA");
+const skillMargin = document.getElementById("sM");
+skillFailAt.addEventListener("input", () => {
+  skillMargin.max = Math.max(skillFailAt.value -1, 1);
+  skillMargin.value = Math.min(skillMargin.value,skillMargin.max);
+});
+const skillStopAt = document.getElementById("sSA");
+const skillContinueUnder = document.getElementById("sCU");
+skillStopAt.addEventListener("input", () => {
+  skillContinueUnder.value = Math.min(skillContinueUnder.value,skillStopAt.value -1);
+});
+skillContinueUnder.addEventListener("input", () => {
+  skillStopAt.value = Math.max(skillStopAt.value,skillContinueUnder.value-0 +1);
+});
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(dessiner);
+
+
+
+/* ============================================================
+   Traduction FR / EN
+   ============================================================ */
+const TRAD = {
+  fr: {
+    titre: "Malhya — Simulateur de dés",
+    sub: "Simulateur de dés — probabilités de dégâts et de réussite",
+    howto: "Comment le calcul fonctionne",
+    combat: "Combat", skill: "Compétence",
+    atLeast: "Au moins", roll: "Lancer", rollTitle: "Lancer", rollAgain: "Relancer",
+    vide: "Ajoute au moins un dé pour voir la répartition.",
+    bonus: "Bonus permanents", razFight: "Réinitialiser le combat", razSkill: "Réinitialiser le test",
+    dmg: "Dégâts", pa: "Perce-armure", blueRem: "Dés bleus retirés", blackRem: "Dés noirs retirés",
+    attaque: "Attaque", defAdv: "Défense adverse", shieldBase: "Bouclier de base",
+    faceSpe: "Face spéciale", reduction: "Réduction", annulation: "Annulation",
+    seuils: "Seuils du test", failAt: "Échec à", contUnder: "Relancer sous", stopAt: "Arrêt à", marge: "Marge",
+    desTest: "Dés du test", reussites: "Réussites", echecs: "Échecs",
+    hint25: "Ces seuils servent uniquement à tracer la courbe, qui suppose une suite de lancers arbitrée par eux. Le bouton Lancer, lui, ne relance jamais tout seul : c'est toi qui décides.",
+    cache: "Tes réglages sont conservés sur cet appareil.",
+    nomAtt: "Dé d'attaque", emAtt: "Rouge — inflige des dégâts",
+    nomPui: "Dé de puissance", emPui: "Jaune — dégâts élevés, mais faces vides",
+    nomDef: "Dé de défense", emDef: "Bleu — réduit les dégâts",
+    nomEsq: "Dé d'esquive", emEsq: "Noir — une face annule toute l'attaque",
+    nomComp: "Dé de compétence", emComp: "Blanc — génère des réussites",
+    nomDiff: "Dé de difficulté", emDiff: "Noir — génère des échecs",
+    moyDmg: "Dégâts moyens", moySucc: "Réussites moyennes",
+    zeroDmg: "Aucun dégât", zeroSucc: "Échec total",
+    legAtLeastF: "Probabilité d'infliger au moins cette valeur.",
+    legExactF: "Probabilité d'infliger exactement cette valeur.",
+    legAtLeastS: "Probabilité d'obtenir au moins ce nombre de réussites.",
+    legExactS: "Probabilité d'obtenir exactement ce nombre de réussites.",
+    fermer: "Fermer", replierAria: "Replier le graphique", deplierAria: "Déplier le graphique",
+    brut: "Dégâts bruts", reducAdv: "Réduction adverse", reducEff: "Réduction effective",
+    dontBaseDegat: "dont {n} dégats de base",
+    dontBaseBouclier: "dont {n} de bouclier de base",
+    dontBasePerceArmure: "dont {n} perce-armure de base",
+    finalDmg: "Dégâts infligés", esquive: "Esquive !",
+    aucunDe: "Aucun dé sélectionné pour ce lancer.",
+    desRetires: "{n} dé(s) de défense retiré(s) avant le lancer.",
+    lancerN: "Lancer n°{n}", nbLancers: "Lancers effectués",
+    testPerdu: "Test perdu", totalReussites: "Réussites obtenues", aucunLancer: "Aucun lancer : les seuils sont déjà atteints.",
+    nouveauTest: "Nouveau test", risqueSi: "Risque d'échec si tu relances", surN: "sur {n}"
+  },
+  en: {
+    titre: "Malhya — Dice simulator",
+    sub: "Dice simulator — damage and success probabilities",
+    howto: "How the maths work",
+    combat: "Combat", skill: "Skill",
+    atLeast: "At least", roll: "Roll", rollTitle: "Roll", rollAgain: "Roll again",
+    vide: "Add at least one die to see the distribution.",
+    bonus: "Permanent bonuses", razFight: "Reset combat", razSkill: "Reset test",
+    dmg: "Damage", pa: "Armour piercing", blueRem: "Blue dice removed", blackRem: "Black dice removed",
+    attaque: "Attack", defAdv: "Enemy defence", shieldBase: "Base shield",
+    faceSpe: "Special face", reduction: "Reduction", annulation: "Cancel",
+    seuils: "Test thresholds", failAt: "Fail at", contUnder: "Reroll under", stopAt: "Stop at", marge: "Margin",
+    desTest: "Test dice", reussites: "Successes", echecs: "Failures",
+    hint25: "These thresholds only drive the curve, which assumes a sequence of throws arbitrated by them. The Roll button never throws again on its own — that call is yours.",
+    cache: "Your settings are kept on this device.",
+    nomAtt: "Attack die", emAtt: "Red — deals damage",
+    nomPui: "Power die", emPui: "Yellow — high damage, but blank faces",
+    nomDef: "Defence die", emDef: "Blue — reduces damage",
+    nomEsq: "Dodge die", emEsq: "Black — one face cancels the whole attack",
+    nomComp: "Skill die", emComp: "White — generates successes",
+    nomDiff: "Difficulty die", emDiff: "Black — generates failures",
+    moyDmg: "Average damage", moySucc: "Average successes",
+    zeroDmg: "No damage", zeroSucc: "Total failure",
+    legAtLeastF: "Chance to deal at least this much damage.",
+    legExactF: "Chance to deal exactly this much damage.",
+    legAtLeastS: "Chance to score at least this many successes.",
+    legExactS: "Chance to score exactly this many successes.",
+    fermer: "Close", replierAria: "Collapse the chart", deplierAria: "Expand the chart",
+    brut: "Raw damage", reducAdv: "Enemy reduction", reducEff: "Effective reduction",
+    dontBaseDegat: "including {n} from the base damage",
+    dontBaseBouclier: "including {n} from the base shield",
+    dontBasePerceArmure: "including {n} from the base armor piercing",
+    finalDmg: "Damage dealt", esquive: "Dodged!",
+    aucunDe: "No dice selected for this roll.",
+    desRetires: "{n} defence die/dice removed before the roll.",
+    lancerN: "Throw #{n}", nbLancers: "Throws made",
+    testPerdu: "Test failed", totalReussites: "Successes scored", aucunLancer: "No throw: the thresholds are already met.",
+    nouveauTest: "New test", risqueSi: "Failure risk if you roll again", surN: "of {n}"
+  }
+};
+
+let langue = "fr";
+function t(cle, vars) {
+  let txt = (TRAD[langue] && TRAD[langue][cle]) || TRAD.fr[cle] || cle;
+  if (vars) for (const k in vars) txt = txt.replace("{" + k + "}", vars[k]);
+  return txt;
+}
+
+function appliquerLangue(code) {
+  langue = (code === "en") ? "en" : "fr";
+  document.documentElement.lang = langue;
+  document.title = t("titre");
+  document.querySelectorAll("[data-t]").forEach(el => { el.textContent = t(el.dataset.t); });
+
+  const bloc = document.getElementById("langues");
+  bloc.dataset.lang = langue;
+  bloc.querySelectorAll(".lang-btn").forEach(b => b.classList.toggle("active", b.dataset.lang === langue));
+
+  const zone = document.getElementById("resultats");
+  const replie = zone.classList.contains("replie");
+  document.getElementById("replier").setAttribute("aria-label", replie ? t("deplierAria") : t("replierAria"));
+  document.getElementById("aideFermer").setAttribute("aria-label", t("fermer"));
+  document.getElementById("tableFermer").setAttribute("aria-label", t("fermer"));
+
+  fermerAide();
+  recalculate();
+  majBoutonsTable();
+}
+
+document.getElementById("langues").addEventListener("click", (e) => {
+  const b = e.target.closest(".lang-btn");
+  if (!b || b.dataset.lang === langue) return;
+  appliquerLangue(b.dataset.lang);
+  sauver();
+  if (document.getElementById("tableJeu").classList.contains("ouvert")) jouer(true);
+  majBoutonsTable();
+});
+
+/* ---------- Fiches d'explication ---------- */
+function chips(couleur, faces) {
+  const html = faces.map(f => `<span class="face ${f[1] || ""}">${f[0]}</span>`).join("");
+  return `<div class="faces" style="--c: var(--${couleur})">${html}</div>`;
+}
+const DMG  = '<svg class="ico"><use href="#i-dmg"/></svg>';
+const ARM  = '<svg class="ico"><use href="#i-arm"/></svg>';
+const OK   = '<svg class="ico"><use href="#i-ok"/></svg>';
+const KO   = '<svg class="ico"><use href="#i-ko"/></svg>';
+const STAR = '<svg class="ico"><use href="#i-star"/></svg>';
+const VIDE = '<svg class="ico"><use href="#i-vide"/></svg>';
+
+const AIDE_FR = {
+
+  global: {
+    titre: "Comment le calcul fonctionne",
+    corps: `
+      <p>Le simulateur ne lance aucun dé. Il énumère <strong>toutes les combinaisons de faces possibles</strong> et additionne leurs probabilités. Les pourcentages affichés sont donc exacts, pas estimés par tirages.</p>
+      <p>En mode Combat, l'ordre des opérations est le suivant :</p>
+      <ol>
+        <li>Les dés d'attaque et de puissance sont combinés entre eux, avec les bonus permanents : on obtient la distribution des <strong>dégâts bruts</strong>, du perce-armure et des dés de défense retirés.</li>
+        <li>Les dés de défense retirés sont soustraits du nombre de dés adverses, <strong>avant</strong> que l'adversaire ne lance.</li>
+        <li>Le <strong>bouclier de base</strong> de l'adversaire et ses dés de défense et d'esquive restants sont combinés : on obtient une <strong>réduction totale</strong> et une éventuelle annulation.</li>
+        <li>Dégâts finaux = dégâts bruts - (réduction - perce-armure). Le résultat ne descend jamais sous 0, et une annulation le met directement à 0.</li>
+      </ol>
+      <div class="aide-note">Le nombre de combinaisons grandit vite avec le nombre de dés. Au-delà d'une dizaine, le calcul peut prendre un instant avant que la courbe ne se mette à jour.</div>`
+  },
+
+  fixes: {
+    titre: "Bonus permanents",
+    corps: `
+      <p>Ces quatre valeurs sont appliquées <strong>une seule fois</strong>, avant tout lancer, quel que soit le résultat des dés.</p>
+      <ul>
+        <li><strong>Dégâts</strong> — ajoutés au total brut, comme si un dé était tombé dessus à coup sûr.</li>
+        <li><strong>Perce-armure</strong> — retiré de la réduction adverse, pas des dégâts. Sans réduction en face, il ne sert à rien.</li>
+        <li><strong>Dés bleus / noirs retirés</strong> — l'adversaire lance ce nombre de dés en moins. S'il ne lui en reste aucun, il ne lance rien du tout.</li>
+      </ul>
+      <div class="exemple">
+        <b>Exemple</b>
+        Tu infliges 3 dégâts bruts, l'adversaire obtient 2 de réduction et tu as 1 de perce-armure.<br>
+        <span class="calc">réduction effective = 2 - 1 = 1 → dégâts = 3 - 1 = 2</span>
+      </div>
+      <p>Le perce-armure ne crée jamais de dégâts supplémentaires : si la réduction tombe à 0, le surplus est perdu.</p>`
+  },
+
+  "de-rouge": {
+    titre: "Dé d'attaque",
+    corps: `
+      ${chips("rouge", [[`1${DMG}`,"pleine"],[`1${DMG}`,"pleine"],[`2${DMG}`,"pleine"],[`2${DMG}`,"pleine"],[STAR,"speciale"],[STAR,"speciale"]])}
+      <p>Six faces réparties en trois résultats : 1 dégât, 2 dégâts, ou la face spéciale. Chacun tombe donc avec <strong>exactement 1 chance sur 3</strong>.</p>
+      <p>Sans face spéciale configurée, un dé rapporte en moyenne <strong>1 dégât</strong> : une fois sur trois 1, une fois sur trois 2, une fois sur trois rien.</p>
+      <p>Les dés sont indépendants. Ajouter un dé ne double pas la courbe, il la combine : avec N dés le simulateur parcourt 3<sup>N</sup> combinaisons pondérées, ce qui resserre la distribution autour de la moyenne.</p>
+      <p>La face spéciale n'est pas limitée aux dégâts. Elle peut aussi apporter du perce-armure ou <strong>retirer des dés de défense adverses</strong>, et ce retrait est appliqué avant le lancer de défense.</p>`
+  },
+
+  "de-jaune": {
+    titre: "Dé de puissance",
+    corps: `
+      ${chips("jaune", [[VIDE,""],[`1${DMG}`,"pleine"],[`2${DMG}`,"pleine"],[`3${DMG}`,"pleine"],[`3${DMG}`,"pleine"],[STAR,"speciale"]])}
+      <p>Six faces distinctes, une chance sur six chacune : une vide, puis 1, 2, 3, 3 dégâts, et la face spéciale.</p>
+      <div class="exemple">
+        <b>Moyenne par dé</b>
+        <span class="calc">(0 + 1 + 2 + 3 + 3 + 0) ÷ 6 = 1,5 dégât</span>
+        contre 1 dégât pour le dé d'attaque, face spéciale non configurée.
+      </div>
+      <p>Il frappe donc plus fort, mais il est <strong>plus irrégulier</strong> : une fois sur six il ne donne rien du tout. Sur la courbe, cela se voit à l'étalement — les valeurs extrêmes deviennent atteignables des deux côtés.</p>
+      <p>Comme le dé d'attaque, sa face spéciale peut porter du perce-armure ou retirer des dés de défense adverses.</p>`
+  },
+
+  "defense-base": {
+    titre: "Bouclier de base",
+    corps: `
+      <p>Points de réduction que l'adversaire possède <strong>en permanence</strong>, avant même de lancer le moindre dé. Ils s'ajoutent à ce que donnent ses dés de défense et d'esquive, dans le même total.</p>
+      <p>Ton perce-armure s'applique dessus comme sur le reste : c'est la réduction totale, bouclier de base compris, qui est entamée.</p>
+      <div class="exemple">
+        <b>Exemple</b>
+        Bouclier de base 2, un dé bleu donne 1, tu as 1 de perce-armure, tes dégâts bruts valent 5.<br>
+        <span class="calc">réduction = 2 + 1 = 3 → effective = 3 - 1 = 2 → dégâts = 5 - 2 = 3</span>
+      </div>
+      <p>Contrairement aux dés, ce bouclier est là à tous les coups : il décale toute la courbe vers la gauche au lieu de l'étaler. C'est ce qui rend les petites attaques inutiles face à un adversaire bien protégé.</p>
+      <div class="aide-note">À 0, le calcul est exactement celui d'avant : seule la défense lancée compte.</div>`
+  },
+
+  "de-bleu": {
+    titre: "Dé de défense",
+    corps: `
+      ${chips("bleu", [[VIDE,""],[VIDE,""],[`1${ARM}`,"pleine"],[`1${ARM}`,"pleine"],[`2${ARM}`,"pleine"],[STAR,"speciale"]])}
+      <p>Six faces : deux vides, deux à 1 point de réduction, une à 2, et la face spéciale. Soit environ <strong>0,67 point de réduction par dé</strong> en moyenne.</p>
+      <p>Les réductions de <strong>tous</strong> les dés de défense adverses, bleus et noirs confondus, sont additionnées en un seul total, auquel s'ajoute le bouclier de base. Ton perce-armure est retiré de ce total, puis ce qu'il reste est soustrait à tes dégâts.</p>
+      <div class="exemple">
+        <b>Exemple</b>
+        Deux dés bleus donnent 1 et 2, tu as 1 de perce-armure, tes dégâts bruts valent 4.<br>
+        <span class="calc">réduction = 1 + 2 = 3 → effective = 3 - 1 = 2 → dégâts = 4 - 2 = 2</span>
+      </div>
+      <p>La face spéciale peut porter une réduction, mais aussi une <strong>annulation</strong> : dans ce cas les dégâts tombent à 0 sans passer par la soustraction.</p>`
+  },
+
+  "de-noir": {
+    titre: "Dé d'esquive",
+    corps: `
+      ${chips("noir", [[VIDE,""],[VIDE,""],[VIDE,""],[`2${ARM}`,"pleine"],[KO,"annule"],[STAR,"speciale"]])}
+      <p>Six faces : trois vides, une à 2 points de réduction, une esquive, et la face spéciale.</p>
+      <p>L'esquive ne réduit pas, elle <strong>annule</strong>. Dès qu'un seul dé tombe dessus, les dégâts valent 0, quels que soient tes dés d'attaque et ton perce-armure. C'est le seul effet du jeu qui court-circuite tout le reste du calcul.</p>
+      <div class="exemple">
+        <b>Risque d'esquive</b>
+        <span class="calc">1 - (5 ÷ 6)<sup>N</sup></span> avec N dés noirs :<br>
+        1 dé → 16,7 %　·　2 dés → 30,6 %  ·　3 dés → 42,1 %
+      </div>
+      <p>C'est pourquoi ajouter un dé d'esquive écrase toute la courbe : la probabilité de 0 dégât grimpe d'un coup, et toutes les autres barres sont rabotées dans la même proportion.</p>`
+  },
+
+  seuils: {
+    titre: "Seuils du test",
+    corps: `
+      <p>Un test n'est pas un lancer unique : c'est une <strong>suite de lancers</strong>. Après chacun, les réussites et les échecs s'accumulent dans deux compteurs séparés, puis on décide de relancer ou de s'arrêter.</p>
+      <ol>
+        <li><strong>Échec à</strong> — dès que le compteur d'échecs atteint ce nombre, le test est perdu : les réussites accumulées tombent à 0 et tout s'arrête.</li>
+        <li><strong>Arrêt à</strong> — dès que le compteur de réussites atteint ce nombre, on s'arrête et on garde le résultat.</li>
+        <li><strong>Marge</strong> — nombre d'échecs restants en dessous duquel la situation est jugée risquée. On s'arrête alors pour sécuriser ce qu'on a…</li>
+        <li><strong>Relancer sous</strong> — …sauf si on a moins de réussites que ce nombre. Dans ce cas le résultat est jugé trop faible et on relance malgré le risque.</li>
+      </ol>
+      <div class="exemple">
+        <b>Exemple</b>
+        Échec à 2, Marge 1, Relancer sous 1, Arrêt à 2.<br>
+        Avec 1 échec au compteur, on est à portée de perdre (1 + 1 ≥ 2).<br>
+        <span class="calc">1 réussite ou plus → on s'arrête　·　0 réussite → on relance</span>
+      </div>
+      <div class="aide-note">Ces seuils ne servent qu'à tracer la courbe : ils décrivent une stratégie type, poussée jusqu'à 25 lancers. Le bouton <strong>Lancer</strong> ne les utilise pas — il jette les dés une fois et te laisse décider si tu relances, avec le risque d'échec affiché à chaque étape.</div>`
+  },
+
+  "de-blanc": {
+    titre: "Dé de compétence",
+    corps: `
+      ${chips("blanc", [[VIDE,""],[VIDE,""],[OK,"pleine"],[OK,"pleine"],[OK,"pleine"],[STAR,"speciale"]])}
+      <p>Six faces : deux vides, trois réussites, et la face spéciale. Chaque dé a donc <strong>une chance sur deux</strong> de marquer une réussite, plus ce que rapporte sa face spéciale.</p>
+      <p>Tous les dés de compétence et de difficulté sont lancés <strong>ensemble</strong> à chaque tour de la boucle. Le simulateur combine d'abord les deux paquets en une distribution de couples (réussites, échecs), puis il applique cette distribution lancer après lancer.</p>
+      <p>La face spéciale ajoute un nombre fixe de réussites supplémentaires, réglable juste en dessous de la carte.</p>`
+  },
+
+  "de-difficulte": {
+    titre: "Dé de difficulté",
+    corps: `
+      ${chips("noir", [[VIDE,""],[VIDE,""],[VIDE,""],[KO,"annule"],[KO,"annule"],[STAR,"speciale"]])}
+      <p>Six faces : trois vides, deux échecs, et la face spéciale. Soit <strong>une chance sur trois</strong> de produire un échec par dé.</p>
+      <p>Les échecs ne se compensent pas avec les réussites : ils s'accumulent dans leur propre compteur. Atteindre le seuil d'échec <strong>efface toutes les réussites</strong> déjà acquises, même s'il y en avait beaucoup.</p>
+      <div class="exemple">
+        <b>Ce que ça change</b>
+        Ajouter un dé de difficulté ne déplace pas la courbe vers la gauche d'un cran : cela augmente surtout la barre « 0 réussite », parce qu'un test perdu retombe toujours à zéro.
+      </div>`
+  },
+
+  resultats: {
+    titre: "Lire le graphique",
+    corps: `
+      <ul>
+        <li><strong>Au moins activé</strong> — chaque barre donne la probabilité d'atteindre cette valeur <em>ou plus</em>. La première barre vaut donc toujours 100 %.</li>
+        <li><strong>Au moins désactivé</strong> — chaque barre donne la probabilité d'obtenir <em>exactement</em> cette valeur. L'ensemble des barres fait 100 %.</li>
+      </ul>
+      <p>La <strong>moyenne</strong> est l'espérance : chaque valeur possible est multipliée par sa probabilité exacte, et le tout est additionné. Elle ne correspond pas forcément à une valeur atteignable — le trait doré en pointillés la place entre les barres.</p>
+      <p>Le second chiffre donne la probabilité que le total tombe à <strong>zéro</strong> : réduction suffisante, esquive, attaque nulle, ou test perdu en mode Compétence.</p>
+      <div class="aide-note">Les valeurs dont la probabilité est inférieure à 0,01 % ne sont pas tracées. C'est pour cela que la somme des barres peut afficher très légèrement moins de 100 %.</div>`
+  }
+};
+
+
+const AIDE_EN = {
+
+  global: {
+    titre: "How the maths work",
+    corps: `
+      <p>The simulator never rolls anything. It enumerates <strong>every possible combination of faces</strong> and adds up their probabilities. The percentages shown are exact, not sampled.</p>
+      <p>In Combat mode, operations happen in this order:</p>
+      <ol>
+        <li>Attack and power dice are combined together with the permanent bonuses, giving the distribution of <strong>raw damage</strong>, armour piercing and removed defence dice.</li>
+        <li>Removed defence dice are subtracted from the enemy's pool <strong>before</strong> they roll.</li>
+        <li>The enemy's <strong>base shield</strong> and its remaining defence and dodge dice are combined into a <strong>total reduction</strong>, plus a possible cancel.</li>
+        <li>Final damage = raw damage - (reduction - armour piercing). The result never drops below 0, and a cancel sends it straight to 0.</li>
+      </ol>
+      <div class="aide-note">The number of combinations grows fast with the number of dice. Beyond a dozen, the curve may take a moment to refresh.</div>`
+  },
+
+  fixes: {
+    titre: "Permanent bonuses",
+    corps: `
+      <p>These four values apply <strong>once</strong>, before any roll, whatever the dice show.</p>
+      <ul>
+        <li><strong>Damage</strong> — added to the raw total, as if a die had landed on it for certain.</li>
+        <li><strong>Armour piercing</strong> — taken off the enemy's reduction, not off your damage. With nothing to reduce, it does nothing.</li>
+        <li><strong>Blue / black dice removed</strong> — the enemy rolls that many dice fewer. With none left, they roll nothing at all.</li>
+      </ul>
+      <div class="exemple">
+        <b>Example</b>
+        You deal 3 raw damage, the enemy gets 2 reduction and you have 1 armour piercing.<br>
+        <span class="calc">effective reduction = 2 - 1 = 1 → damage = 3 - 1 = 2</span>
+      </div>
+      <p>Armour piercing never creates extra damage: once the reduction hits 0, the surplus is lost.</p>`
+  },
+
+  "de-rouge": {
+    titre: "Attack die",
+    corps: `
+      ${chips("rouge", [[`1${DMG}`,"pleine"],[`1${DMG}`,"pleine"],[`2${DMG}`,"pleine"],[`2${DMG}`,"pleine"],[STAR,"speciale"],[STAR,"speciale"]])}
+      <p>Six faces covering three outcomes: 1 damage, 2 damage, or the special face. Each one comes up with <strong>exactly a 1 in 3 chance</strong>.</p>
+      <p>With no special face configured, one die averages <strong>1 damage</strong>: one third of the time 1, one third 2, one third nothing.</p>
+      <p>Dice are independent. Adding a die does not double the curve, it combines it: with N dice the simulator walks 3<sup>N</sup> weighted combinations, which tightens the spread around the average.</p>
+      <p>The special face is not limited to damage. It can also grant armour piercing or <strong>remove enemy defence dice</strong>, and that removal happens before the defence roll.</p>`
+  },
+
+  "de-jaune": {
+    titre: "Power die",
+    corps: `
+      ${chips("jaune", [[VIDE,""],[`1${DMG}`,"pleine"],[`2${DMG}`,"pleine"],[`3${DMG}`,"pleine"],[`3${DMG}`,"pleine"],[STAR,"speciale"]])}
+      <p>Six distinct faces, one chance in six each: one blank, then 1, 2, 3, 3 damage, and the special face.</p>
+      <div class="exemple">
+        <b>Average per die</b>
+        <span class="calc">(0 + 1 + 2 + 3 + 3 + 0) ÷ 6 = 1.5 damage</span>
+        against 1 damage for the attack die, with no special face configured.
+      </div>
+      <p>It hits harder, but it is <strong>far less reliable</strong>: one roll in six gives nothing at all. On the chart this shows as a wider spread — extreme values become reachable on both ends.</p>
+      <p>Like the attack die, its special face can carry armour piercing or remove enemy defence dice.</p>`
+  },
+
+  "defense-base": {
+    titre: "Base shield",
+    corps: `
+      <p>Reduction points the enemy has <strong>at all times</strong>, before rolling a single die. They go into the same total as whatever the defence and dodge dice produce.</p>
+      <p>Your armour piercing eats into it just like the rest: it is the whole reduction, base shield included, that gets cut.</p>
+      <div class="exemple">
+        <b>Example</b>
+        Base shield 2, one blue die shows 1, you have 1 armour piercing, your raw damage is 5.<br>
+        <span class="calc">reduction = 2 + 1 = 3 → effective = 3 - 1 = 2 → damage = 5 - 2 = 3</span>
+      </div>
+      <p>Unlike dice, this shield is there every single time: it shifts the whole curve left instead of spreading it. That is what makes small attacks pointless against a well-protected enemy.</p>
+      <div class="aide-note">At 0, the maths are exactly what they were before: only rolled defence counts.</div>`
+  },
+
+  "de-bleu": {
+    titre: "Defence die",
+    corps: `
+      ${chips("bleu", [[VIDE,""],[VIDE,""],[`1${ARM}`,"pleine"],[`1${ARM}`,"pleine"],[`2${ARM}`,"pleine"],[STAR,"speciale"]])}
+      <p>Six faces: two blank, two worth 1 reduction point, one worth 2, and the special face. That averages roughly <strong>0.67 reduction per die</strong>.</p>
+      <p>Reduction from <strong>all</strong> enemy defence dice, blue and black alike, is added into a single total, on top of the base shield. Your armour piercing is taken off that total, and whatever remains is subtracted from your damage.</p>
+      <div class="exemple">
+        <b>Example</b>
+        Two blue dice show 1 and 2, you have 1 armour piercing, your raw damage is 4.<br>
+        <span class="calc">reduction = 1 + 2 = 3 → effective = 3 - 1 = 2 → damage = 4 - 2 = 2</span>
+      </div>
+      <p>The special face can carry reduction, but also a <strong>cancel</strong>: damage then drops to 0 without going through the subtraction.</p>`
+  },
+
+  "de-noir": {
+    titre: "Dodge die",
+    corps: `
+      ${chips("noir", [[VIDE,""],[VIDE,""],[VIDE,""],[`2${ARM}`,"pleine"],[KO,"annule"],[STAR,"speciale"]])}
+      <p>Six faces: three blank, one worth 2 reduction points, one dodge, and the special face.</p>
+      <p>A dodge does not reduce, it <strong>cancels</strong>. The moment a single die lands on it, damage is 0 whatever your attack dice and armour piercing did. It is the one effect that short-circuits the entire calculation.</p>
+      <div class="exemple">
+        <b>Dodge risk</b>
+        <span class="calc">1 - (5 ÷ 6)<sup>N</sup></span> with N black dice:<br>
+        1 die → 16.7 %　·　2 dice → 30.6 %　·　3 dice → 42.1 %
+      </div>
+      <p>That is why adding one dodge die flattens the whole curve: the chance of 0 damage jumps at once, and every other bar is shaved by the same proportion.</p>`
+  },
+
+  seuils: {
+    titre: "Test thresholds",
+    corps: `
+      <p>A test is not a single roll, it is a <strong>sequence of throws</strong>. After each one, successes and failures pile up in two separate counters, then you decide to throw again or stop.</p>
+      <ol>
+        <li><strong>Fail at</strong> — the moment the failure counter reaches this number, the test is lost: accumulated successes drop to 0 and everything stops.</li>
+        <li><strong>Stop at</strong> — the moment the success counter reaches this number, you stop and keep the result.</li>
+        <li><strong>Margin</strong> — how many failures short of losing counts as risky. At that point you stop to bank what you have…</li>
+        <li><strong>Reroll under</strong> — …unless you have fewer successes than this number. The result is then judged too weak and you throw again despite the risk.</li>
+      </ol>
+      <div class="exemple">
+        <b>Example</b>
+        Fail at 2, Margin 1, Reroll under 1, Stop at 2.<br>
+        With 1 failure banked, you are within range of losing (1 + 1 ≥ 2).<br>
+        <span class="calc">1 success or more → you stop　·　0 successes → you throw again</span>
+      </div>
+      <div class="aide-note">These thresholds only shape the curve: they describe a typical strategy, pushed up to 25 throws. The <strong>Roll</strong> button ignores them — it throws the dice once and lets you decide whether to go again, with the failure risk shown at every step.</div>`
+  },
+
+  "de-blanc": {
+    titre: "Skill die",
+    corps: `
+      ${chips("blanc", [[VIDE,""],[VIDE,""],[OK,"pleine"],[OK,"pleine"],[OK,"pleine"],[STAR,"speciale"]])}
+      <p>Six faces: two blank, three successes, and the special face. Each die therefore has <strong>a one in two chance</strong> of scoring a success, plus whatever its special face gives.</p>
+      <p>Skill and difficulty dice are all thrown <strong>together</strong> on every pass of the loop. The simulator first combines both pools into a distribution of (successes, failures) pairs, then applies that distribution throw after throw.</p>
+      <p>The special face adds a fixed number of extra successes, set just below the card.</p>`
+  },
+
+  "de-difficulte": {
+    titre: "Difficulty die",
+    corps: `
+      ${chips("noir", [[VIDE,""],[VIDE,""],[VIDE,""],[KO,"annule"],[KO,"annule"],[STAR,"speciale"]])}
+      <p>Six faces: three blank, two failures, and the special face. That is <strong>one chance in three</strong> of producing a failure per die.</p>
+      <p>Failures are not cancelled out by successes: they pile up in their own counter. Reaching the failure threshold <strong>wipes every success</strong> already banked, however many there were.</p>
+      <div class="exemple">
+        <b>What it changes</b>
+        Adding a difficulty die does not shift the curve left by one step: it mostly inflates the "0 successes" bar, because a lost test always falls back to zero.
+      </div>`
+  },
+
+  resultats: {
+    titre: "Reading the chart",
+    corps: `
+      <ul>
+        <li><strong>At least, on</strong> — each bar gives the chance of reaching that value <em>or more</em>. The first bar is therefore always 100 %.</li>
+        <li><strong>At least, off</strong> — each bar gives the chance of getting <em>exactly</em> that value. All bars together make 100 %.</li>
+      </ul>
+      <p>The <strong>average</strong> is the expected value: every possible outcome multiplied by its exact probability, all added up. It need not be a reachable value — the dashed gold line places it between the bars.</p>
+      <p>The second figure is the chance the total lands on <strong>zero</strong>: enough reduction, a dodge, a blank attack, or a lost test in Skill mode.</p>
+      <div class="aide-note">Outcomes below 0.01 % are not drawn. That is why the bars can add up to very slightly less than 100 %.</div>`
+  }
+};
+
+/* ============================================================
+   Lancer réel — tirage aléatoire animé.
+   N'utilise aucune des fonctions de probabilité : il tire une face
+   au hasard par dé, puis applique les mêmes règles de résolution.
+   ============================================================ */
+const tableVoile = document.getElementById("tableVoile");
+const tableJeu = document.getElementById("tableJeu");
+const tableScene = document.getElementById("tableScene");
+const tableBilan = document.getElementById("tableBilan");
+const relancerBtn = document.getElementById("relancerBtn");
+
+// Rotation qui amène chaque face vers le haut : avant, arrière, droite,
+// gauche, dessus, dessous.
+const ORIENT = [[90,0],[90,180],[90,-90],[90,90],[0,0],[180,0]];
+const VUE = "rotateX(-52deg) rotateY(-24deg) ";
+const DUREE_DE = 1500, PAS_DE = 95;
+
+const DES_DEF = {
+  rouge: { c: "var(--rouge)", sym: "rgba(255,238,231,.95)",
+           faces: ["1"+DMG, "1"+DMG, "2"+DMG, "2"+DMG, STAR, STAR] },
+  jaune: { c: "var(--jaune)", sym: "rgba(56,38,4,.82)",
+           faces: [VIDE, "1"+DMG, "2"+DMG, "3"+DMG, "3"+DMG, STAR] },
+  bleu:  { c: "var(--bleu)", sym: "rgba(234,244,255,.95)",
+           faces: [VIDE, VIDE, "1"+ARM, "1"+ARM, "2"+ARM, STAR] },
+  noir:  { c: "var(--noir)", sym: "rgba(233,229,255,.92)",
+           faces: [VIDE, VIDE, VIDE, "2"+ARM, KO, STAR] },
+  blanc: { c: "var(--blanc)", sym: "rgba(44,36,22,.80)",
+           faces: [VIDE, VIDE, OK, OK, OK, STAR] },
+  diff:  { c: "var(--noir)", sym: "rgba(233,229,255,.92)",
+           faces: [VIDE, VIDE, VIDE, KO, KO, STAR] }
+};
+
+function d6() { return Math.floor(Math.random() * 6); }
+function attendre(ms) { return new Promise(r => setTimeout(r, reduit ? 0 : ms)); }
+
+function creerDe(type, index, delai) {
+  const def = DES_DEF[type];
+  const jet = document.createElement("div");
+  jet.className = "jet";
+  jet.style.animationDelay = delai + "ms";
+
+  const scene = document.createElement("div");
+  scene.className = "scene3d";
+  const cube = document.createElement("div");
+  cube.className = "cube3d";
+  cube.style.setProperty("--c", def.c);
+  cube.style.setProperty("--sym", def.sym);
+  def.faces.forEach((html, i) => {
+    const f = document.createElement("div");
+    f.className = "f3d v" + (i + 1);
+    f.innerHTML = html;
+    cube.appendChild(f);
+  });
+  scene.appendChild(cube);
+  jet.appendChild(scene);
+
+  const base = ORIENT[index];
+  const rx = base[0] + 360 * (2 + Math.floor(Math.random() * 3));
+  const ry = base[1] + 360 * (2 + Math.floor(Math.random() * 3));
+
+  if (reduit) {
+    cube.style.transition = "none";
+    cube.style.transform = VUE + `rotateX(${base[0]}deg) rotateY(${base[1]}deg)`;
+    jet.style.animation = "none";
+  } else {
+    setTimeout(() => {
+      cube.style.transform = VUE + `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    }, delai + 50);
+    setTimeout(() => jet.classList.add("pose"), delai + 50 + DUREE_DE);
+  }
+  return jet;
+}
+
+function creerGroupe(titre, des, decalage) {
+  const g = document.createElement("div");
+  g.className = "jet-groupe";
+  if (titre) {
+    const h = document.createElement("span");
+    h.className = "jet-titre";
+    h.textContent = titre;
+    g.appendChild(h);
+  }
+  const rangee = document.createElement("div");
+  rangee.className = "jet-des";
+  des.forEach((d, i) => rangee.appendChild(creerDe(d[0], d[1], decalage + i * PAS_DE)));
+  g.appendChild(rangee);
+  return g;
+}
+
+function note(texte) {
+  const p = document.createElement("p");
+  p.className = "jet-note";
+  p.textContent = texte;
+  return p;
+}
+
+function compteur(el, cible) {
+  if (reduit) { el.textContent = String(cible); return; }
+  const debut = performance.now();
+  const boucle = (t) => {
+    const k = Math.min(1, (t - debut) / 420);
+    el.textContent = String(Math.round(cible * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) requestAnimationFrame(boucle);
+  };
+  requestAnimationFrame(boucle);
+}
+
+function afficherBilan(html, reussi) {
+  tableBilan.innerHTML = `<div class="bilan${reussi ? " reussi" : ""}">${html}</div>`;
+  const gros = tableBilan.querySelector(".bilan-total b");
+  if (gros && gros.dataset.n !== undefined) {
+    gros.classList.add("bilan-fanfare");
+    compteur(gros, Number(gros.dataset.n));
+  }
+}
+
+/* ---------- Combat ---------- */
+async function jouerCombat() {
+  const flat = [num("flat_d"), num("flat_sr"), num("flat_blue_dr"), num("flat_black_dr")];
+  const rSpe = [num("s_r_d"), num("s_r_sr"), num("s_r_blue_dr"), num("s_r_black_dr")];
+  const ySpe = [num("s_y_d"), num("s_y_sr"), num("s_y_blue_dr"), num("s_y_black_dr")];
+  const blueSpe = [num("s_blue_s"), num("s_blue_c")];
+  const blackSpe = [num("s_black_s"), num("s_black_c")];
+
+  const EFF = {
+    rouge: [[1,0,0,0],[1,0,0,0],[2,0,0,0],[2,0,0,0], rSpe, rSpe],
+    jaune: [[0,0,0,0],[1,0,0,0],[2,0,0,0],[3,0,0,0],[3,0,0,0], ySpe],
+    bleu:  [[0,0],[0,0],[1,0],[1,0],[2,0], blueSpe],
+    noir:  [[0,0],[0,0],[0,0],[2,0],[0,1], blackSpe]
+  };
+
+  let degats = flat[0], perce = flat[1], retBleu = flat[2], retNoir = flat[3];
+  const baseDegat = degats;
+  const basePerce = perce;
+  const att = [];
+  for (let i = 0; i < num("dR"); i++) {
+    const k = d6(); att.push(["rouge", k]);
+    const e = EFF.rouge[k]; degats += e[0]; perce += e[1]; retBleu += e[2]; retNoir += e[3];
+  }
+  for (let i = 0; i < num("dJ"); i++) {
+    const k = d6(); att.push(["jaune", k]);
+    const e = EFF.jaune[k]; degats += e[0]; perce += e[1]; retBleu += e[2]; retNoir += e[3];
+  }
+
+  const nbBleu = Math.max(0, num("dB") - retBleu);
+  const nbNoir = Math.max(0, num("dN") - retNoir);
+  const retires = Math.max(0, num("dB") - nbBleu) + Math.max(0, num("dN") - nbNoir);
+
+  const baseBouclier = num("flat_shield");
+  let reduction = baseBouclier, annule = 0;
+  const def = [];
+  for (let i = 0; i < nbBleu; i++) {
+    const k = d6(); def.push(["bleu", k]);
+    const e = EFF.bleu[k]; reduction += e[0]; annule += e[1];
+  }
+  for (let i = 0; i < nbNoir; i++) {
+    const k = d6(); def.push(["noir", k]);
+    const e = EFF.noir[k]; reduction += e[0]; annule += e[1];
+  }
+
+  const effective = Math.max(0, reduction - perce);
+  const total = annule > 0 ? 0 : Math.max(degats - effective, 0);
+
+  if (!att.length && !def.length) {
+    tableScene.appendChild(note(t("aucunDe")));
+  } else {
+    if (att.length) tableScene.appendChild(creerGroupe(t("attaque"), att, 0));
+    if (def.length) tableScene.appendChild(creerGroupe(t("defAdv"), def, att.length * PAS_DE + 260));
+    if (retires > 0) tableScene.appendChild(note(t("desRetires", { n: retires })));
+  }
+
+  await attendre(DUREE_DE + (att.length + def.length) * PAS_DE + (def.length ? 380 : 180));
+
+  let html = "";
+  if (annule > 0) html += `<div class="bandeau-esquive">${t("esquive")}</div>`;
+  
+  const detailDegat = baseDegat > 0 ? ` <small>(${t("dontBaseDegat", { n: baseDegat })})</small>` : "";
+  html += `<div class="bilan-ligne"><span>${t("brut")}${detailDegat}</span><b>${degats}</b></div>`;
+
+  if (reduction > 0 || perce > 0) {
+    const detailBouclier = baseBouclier > 0 ? ` <small>(${t("dontBaseBouclier", { n: baseBouclier })})</small>` : "";
+    html += `<div class="bilan-ligne"><span>${t("reducAdv")}${detailBouclier}</span><b>-${reduction}</b></div>`;
+  }
+  if (perce > 0) {
+    const detailPerceArmure = basePerce > 0 ? ` <small>(${t("dontBasePerceArmure", { n: basePerce })})</small>` : "";
+    html += `<div class="bilan-ligne"><span>${t("pa")}${detailPerceArmure}</span><b>+${perce}</b></div>`;
+  }
+  if (reduction > 0 || perce > 0) html += `<div class="bilan-ligne"><span>${t("reducEff")}</span><b>-${effective}</b></div>`;
+  html += `<div class="bilan-total"><span>${t("finalDmg")}</span><b data-n="${total}">0</b></div>`;
+  afficherBilan(html, false);
+}
+
+/* ---------- Compétence ---------- */
+/* Un seul lancer par appui. Les seuils ne servent qu'à la courbe de
+   probabilités : ici c'est le joueur qui décide de relancer ou de s'arrêter. */
+let etatSkill = null;
+
+/* Probabilité d'atteindre le seuil d'échec si on relance maintenant. */
+function risqueRelance(nbB, speB, failAt, dejaF) {
+  const bRoll = de(nbB, dSkillB(speB));
+  let r = 0;
+  for (const [k, p] of bRoll) {
+    if (dejaF + Number(k.split(",")[0]) >= failAt) r += p;
+  }
+  return r;
+}
+
+/* Le bilan qui apparaît sous la scène en réduit la hauteur : on recolle en bas
+   une fois la mise en page stabilisée, sinon le dernier lancer reste coupé. */
+function versLeBas() {
+  requestAnimationFrame(() => {
+    tableScene.scrollTop = tableScene.scrollHeight;
+    setTimeout(() => { tableScene.scrollTop = tableScene.scrollHeight; }, 90);
+  });
+}
+
+async function jouerSkill(nouveau) {
+  const nbW = num("s_d_w"), nbB = num("s_d_b");
+  const vW = [0, 0, 1, 1, 1, num("s_s_w")];
+  const vB = [0, 0, 0, 1, 1, num("s_s_b")];
+  const failAt = Math.max(1, num("sFA"));
+
+  if (nouveau || !etatSkill) {
+    etatSkill = { s: 0, f: 0, n: 0, perdu: false };
+    tableScene.innerHTML = "";
+    tableBilan.innerHTML = "";
+  }
+  if (etatSkill.perdu) return;
+
+  if (nbW + nbB === 0) {
+    tableScene.appendChild(note(t("aucunDe")));
+    await attendre(300);
+    afficherBilan(`<div class="bilan-total"><span>${t("totalReussites")}</span><b data-n="0">0</b></div>`, true);
+    return;
+  }
+
+  const des = [];
+  let ds = 0, df = 0;
+  for (let i = 0; i < nbW; i++) { const k = d6(); des.push(["blanc", k]); ds += vW[k]; }
+  for (let i = 0; i < nbB; i++) { const k = d6(); des.push(["diff", k]); df += vB[k]; }
+
+  etatSkill.n++;
+  tableBilan.innerHTML = "";
+  tableScene.appendChild(creerGroupe(t("lancerN", { n: etatSkill.n }), des, 0));
+  versLeBas();
+  await attendre(DUREE_DE + des.length * PAS_DE + 260);
+
+  const r = levelFail(etatSkill.s + ds, etatSkill.f + df, failAt);
+  etatSkill.s = r[0];
+  etatSkill.f = r[1];
+  etatSkill.perdu = etatSkill.f >= failAt;
+
+  tableScene.appendChild(note(
+    t("reussites") + " " + etatSkill.s + "  ·  " +
+    t("echecs") + " " + etatSkill.f + " " + t("surN", { n: failAt })
+  ));
+  versLeBas();
+
+  let html = "";
+  html += `<div class="bilan-ligne"><span>${t("nbLancers")}</span><b>${etatSkill.n}</b></div>`;
+  html += `<div class="bilan-ligne"><span>${t("echecs")}</span><b>${etatSkill.f} / ${failAt}</b></div>`;
+  if (!etatSkill.perdu) {
+    const risque = risqueRelance(nbB, num("s_s_b"), failAt, etatSkill.f);
+    html += `<div class="bilan-ligne"><span>${t("risqueSi")}</span><b>${(risque * 100).toFixed(1)} %</b></div>`;
+  }
+  html += `<div class="bilan-total"><span>${etatSkill.perdu ? t("testPerdu") : t("totalReussites")}</span>`
+        + `<b data-n="${etatSkill.s}">0</b></div>`;
+  afficherBilan(html, !etatSkill.perdu);
+  versLeBas();
+}
+
+const nouveauBtn = document.getElementById("nouveauBtn");
+
+function majBoutonsTable() {
+  const skill = mode === "skill";
+  nouveauBtn.hidden = !skill;
+  relancerBtn.disabled = enCours || (skill && etatSkill && etatSkill.perdu);
+  nouveauBtn.disabled = enCours;
+}
+
+let enCours = false;
+async function jouer(nouveau) {
+  if (enCours) return;
+  enCours = true;
+  majBoutonsTable();
+  try {
+    if (mode === "fight") {
+      tableScene.innerHTML = "";
+      tableBilan.innerHTML = "";
+      await jouerCombat();
+    } else {
+      await jouerSkill(nouveau);
+    }
+  } catch (e) { console.error(e); }
+  enCours = false;
+  majBoutonsTable();
+}
+
+function ouvrirTable() {
+  tableVoile.classList.add("ouvert");
+  tableJeu.classList.add("ouvert");
+  tableVoile.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  jouer(true);
+}
+function fermerTable() {
+  if (!tableJeu.classList.contains("ouvert")) return;
+  tableVoile.classList.remove("ouvert");
+  tableJeu.classList.remove("ouvert");
+  tableVoile.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  document.getElementById("lancerBtn").focus({ preventScroll: true });
+}
+
+document.getElementById("lancerBtn").addEventListener("click", ouvrirTable);
+relancerBtn.addEventListener("click", () => jouer(false));
+nouveauBtn.addEventListener("click", () => jouer(true));
+document.getElementById("tableFermer").addEventListener("click", fermerTable);
+tableVoile.addEventListener("click", fermerTable);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fermerTable(); });
+
+const voile = document.getElementById("voile");
+const feuille = document.getElementById("feuille");
+const aideTitre = document.getElementById("aideTitre");
+const aideCorps = document.getElementById("aideCorps");
+let declencheur = null;
+
+function ouvrirAide(cle, source) {
+  const fiche = (langue === "en" ? AIDE_EN : AIDE_FR)[cle];
+  if (!fiche) return;
+  declencheur = source || null;
+  aideTitre.textContent = fiche.titre;
+  aideCorps.innerHTML = fiche.corps;
+  aideCorps.scrollTop = 0;
+  voile.classList.add("ouvert");
+  feuille.classList.add("ouvert");
+  document.body.style.overflow = "hidden";
+  document.getElementById("aideFermer").focus({ preventScroll: true });
+}
+
+function fermerAide() {
+  if (!feuille.classList.contains("ouvert")) return;
+  voile.classList.remove("ouvert");
+  feuille.classList.remove("ouvert");
+  document.body.style.overflow = "";
+  if (declencheur) { declencheur.focus({ preventScroll: true }); declencheur = null; }
+}
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-info]");
+  if (btn) { ouvrirAide(btn.dataset.info, btn); return; }
+  if (e.target.closest("#aideFermer")) fermerAide();
+});
+voile.addEventListener("click", fermerAide);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fermerAide(); });
+
+
+(function semerBraises() {
+  const zone = document.getElementById("braises");
+  if (!zone) return;
+  const n = window.innerWidth < 640 ? 14 : 24;
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    const gauche = (Math.random() * 100).toFixed(1);
+    const taille = (2 + Math.random() * 3).toFixed(1);
+    const duree = (10 + Math.random() * 12).toFixed(1);
+    const retard = (Math.random() * 22).toFixed(1);
+    const derive = (Math.random() * 60 - 30).toFixed(0);
+    html += `<span class="braise-part" style="left:${gauche}%;--s:${taille}px;--dur:${duree}s;--retard:${retard}s;--derive:${derive}px"></span>`;
+  }
+  zone.innerHTML = html;
+})();
+
+const modeSauve = charger();
+majDes(false);
+if (modeSauve === "skill") basculer("skill", true);
+appliquerLangue(langueSauvee || ((navigator.language || "fr").toLowerCase().indexOf("fr") === 0 ? "fr" : "en"));
+</script>
+</body>
+</html>
