@@ -345,7 +345,6 @@
   .de .f-gauche { fill: color-mix(in srgb, var(--c) 52%, #000000 48%); }
   .de .f-droite { fill: color-mix(in srgb, var(--c) 76%, #000000 24%); }
   .de .arete    { fill: none; stroke: rgba(0,0,0,.34); stroke-width: .7; stroke-linejoin: round; }
-  .de .brillance{ fill: rgba(255,255,255,.22); }
   .de .sym      { color: var(--sym); }
   .de .sym-cote { color: var(--sym); opacity: .30; }
   .de.lance { animation: lancer .58s cubic-bezier(.3,.7,.4,1); }
@@ -780,6 +779,7 @@
     transform: rotateX(-52deg) rotateY(-24deg) rotateX(0deg) rotateY(0deg);
     transition: transform 1.55s cubic-bezier(.13,.82,.2,1);
   }
+  
   .f3d {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center; gap: 3px;
@@ -792,15 +792,40 @@
     font-weight: 700; font-size: calc(var(--d) * .30);
     font-variant-numeric: tabular-nums;
   }
+  .fd3d {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
+    border-radius: 10px;
+    background: linear-gradient(152deg,
+      color-mix(in srgb, var(--c) 86%, #ffffff 14%),
+      color-mix(in srgb, var(--c) 64%, #000000 36%));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.42), inset 0 2px 0 rgba(255,255,255,.30);
+    color: var(--sym);
+    font-weight: 700; font-size: calc(var(--d) * .30);
+    font-variant-numeric: tabular-nums;
+    clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);;
+  }
   .f3d .ico { width: calc(var(--d) * .30); height: calc(var(--d) * .30); }
-  .f3d.v1 { transform: translateZ(calc(var(--d) / 2)); }
-  .f3d.v2 { transform: rotateY(180deg) translateZ(calc(var(--d) / 2)); }
-  .f3d.v3 { transform: rotateY(90deg)  translateZ(calc(var(--d) / 2)); }
-  .f3d.v4 { transform: rotateY(-90deg) translateZ(calc(var(--d) / 2)); }
-  .f3d.v5 { transform: rotateX(90deg)  translateZ(calc(var(--d) / 2)); }
-  .f3d.v6 { transform: rotateX(-90deg) translateZ(calc(var(--d) / 2)); }
+  .f3d.v1 { transform:  translateZ(calc(var(--d) / 2)); }
+  .f3d.v2 { transform:  rotateY(180deg) translateZ(calc(var(--d) / 2)); }
+  .f3d.v3 { transform:  rotateY(90deg)  translateZ(calc(var(--d) / 2)); }
+  .f3d.v4 { transform:  rotateY(-90deg) translateZ(calc(var(--d) / 2)); }
+  .f3d.v5 { transform:  rotateX(90deg)  translateZ(calc(var(--d) / 2)); }
+  .f3d.v6 { transform:  rotateX(-90deg) translateZ(calc(var(--d) / 2)); }
+  .fd3d.v1 { transform:  translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v2 { transform:  rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v3 { transform: rotateZ(72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v4 { transform: rotateZ(144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v5 { transform: rotateZ(-72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v6 { transform: rotateZ(-144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v7 { transform: rotateX(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v8 { transform: rotateX(180deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v9 { transform: rotateX(180deg) rotateZ(72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v10 { transform: rotateX(180deg) rotateZ(144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v11 { transform: rotateX(180deg) rotateZ(-72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d.v12 { transform: rotateX(180deg) rotateZ(-144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
 
-  .jet.pose .scene3d { animation: pose .5s cubic-bezier(.3,1.4,.5,1); }
+  .jet.pose .scene3d { animation:5pose .5s cubic-bezier(.3,1.4,.5,1); }
   @keyframes pose {
     0% { transform: scale(1); }
     30% { transform: scale(1.09) translateY(-3px); }
@@ -927,7 +952,7 @@
       <path fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" d="M24 16 L58 50 L24 84 M62 16 L96 50 L62 84"/>
     </symbol>
     <symbol id="i-vide" viewBox="0 0 100 100">
-      <path fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" d="M22 50 H78"/>
+      
     </symbol>
     <symbol id="i-cube" viewBox="0 0 100 100">
       <path fill="currentColor" d="M50 6 L92 30 L50 54 L8 30 Z" opacity=".95"/>
@@ -1122,7 +1147,7 @@
           <div class="fixe">
             <span><svg class="ico i-dmg"><use href="#i-dmg"/></svg> <b data-t="dmg">Dégâts</b></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="flat_d" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="flat_d" data-delta="-1" aria-label="Retirer">−</button>
               <input id="flat_d" type="number" inputmode="numeric" value="0" min="0">
               <button class="step" data-target="flat_d" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1130,7 +1155,7 @@
           <div class="fixe">
             <span><svg class="ico i-arm"><use href="#i-arm"/></svg> <b data-t="pa">Perce-armure</b></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="flat_sr" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="flat_sr" data-delta="-1" aria-label="Retirer">−</button>
               <input id="flat_sr" type="number" inputmode="numeric" value="0" min="0">
               <button class="step" data-target="flat_sr" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1138,7 +1163,7 @@
           <div class="fixe">
             <span><svg class="ico i-bleu"><use href="#i-cube"/></svg> <b data-t="blueRem">Dés bleus retirés</b></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="flat_blue_dr" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="flat_blue_dr" data-delta="-1" aria-label="Retirer">−</button>
               <input id="flat_blue_dr" type="number" inputmode="numeric" value="0" min="0">
               <button class="step" data-target="flat_blue_dr" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1146,7 +1171,7 @@
           <div class="fixe">
             <span><svg class="ico i-noir"><use href="#i-cube"/></svg> <b data-t="blackRem">Dés noirs retirés</b></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="flat_black_dr" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="flat_black_dr" data-delta="-1" aria-label="Retirer">−</button>
               <input id="flat_black_dr" type="number" inputmode="numeric" value="0" min="0">
               <button class="step" data-target="flat_black_dr" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1159,16 +1184,16 @@
           <!-- Rouge -->
           <article class="carte" style="--c: var(--rouge); --sym: rgba(255,236,228,.92)">
             <div class="tete">
-              <div class="des" data-de="dR" data-sym="i-dmg" aria-hidden="true"></div>
+              <div class="des" data-de="f_d_R" data-sym="i-dmg" aria-hidden="true"></div>
               <div class="nom">
                 <strong data-t="nomAtt">Dé d'attaque</strong>
                 <em data-t="emAtt">Rouge — inflige des dégâts</em>
               </div>
               <button class="info" data-info="de-rouge" aria-label="Détail du calcul du dé d'attaque">i</button>
               <div class="compteur">
-                <button class="step" data-target="dR" data-delta="-1" aria-label="Retirer un dé">-</button>
-                <input id="dR" type="number" inputmode="numeric" value="1" min="0" max="3">
-                <button class="step" data-target="dR" data-delta="1" aria-label="Ajouter un dé">+</button>
+                <button class="step" data-target="f_d_R" data-delta="-1" aria-label="Retirer un dé">−</button>
+                <input id="f_d_R" type="number" inputmode="numeric" value="1" min="0" max="3">
+                <button class="step" data-target="f_d_R" data-delta="1" aria-label="Ajouter un dé">+</button>
               </div>
             </div>
             <div class="faces">
@@ -1187,28 +1212,28 @@
               <div class="special-grille">
                 <label class="mini"><span><svg class="ico i-dmg"><use href="#i-dmg"/></svg> <span data-t="dmg">Dégâts</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_r_d" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_r_d" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_r_d" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_r_d" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_r_sr" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_r_sr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_r_sr" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_r_sr" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-bleu"><use href="#i-cube"/></svg> <span data-t="blueRem">Dés bleus retirés</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_r_blue_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_r_blue_dr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_r_blue_dr" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_r_blue_dr" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-noir"><use href="#i-cube"/></svg> <span data-t="blackRem">Dés noirs retirés</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_r_black_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_r_black_dr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_r_black_dr" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_r_black_dr" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
@@ -1220,16 +1245,16 @@
           <!-- Jaune -->
           <article class="carte" style="--c: var(--jaune); --sym: rgba(58,40,6,.78)">
             <div class="tete">
-              <div class="des" data-de="dJ" data-sym="i-dmg" aria-hidden="true"></div>
+              <div class="des" data-de="f_d_J" data-sym="i-dmg" aria-hidden="true"></div>
               <div class="nom">
                 <strong data-t="nomPui">Dé de puissance</strong>
                 <em data-t="emPui">Jaune — dégâts élevés, mais faces vides</em>
               </div>
               <button class="info" data-info="de-jaune" aria-label="Détail du calcul du dé de puissance">i</button>
               <div class="compteur">
-                <button class="step" data-target="dJ" data-delta="-1" aria-label="Retirer un dé">-</button>
-                <input id="dJ" type="number" inputmode="numeric" value="0" min="0" max="3">
-                <button class="step" data-target="dJ" data-delta="1" aria-label="Ajouter un dé">+</button>
+                <button class="step" data-target="f_d_J" data-delta="-1" aria-label="Retirer un dé">−</button>
+                <input id="f_d_J" type="number" inputmode="numeric" value="0" min="0" max="3">
+                <button class="step" data-target="f_d_J" data-delta="1" aria-label="Ajouter un dé">+</button>
               </div>
             </div>
             <div class="faces">
@@ -1248,28 +1273,28 @@
               <div class="special-grille">
                 <label class="mini"><span><svg class="ico i-dmg"><use href="#i-dmg"/></svg> <span data-t="dmg">Dégâts</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_y_d" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_y_d" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_y_d" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_y_d" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_y_sr" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_y_sr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_y_sr" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_y_sr" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-bleu"><use href="#i-cube"/></svg> <span data-t="blueRem">Dés bleus retirés</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_y_blue_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_y_blue_dr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_y_blue_dr" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_y_blue_dr" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-noir"><use href="#i-cube"/></svg> <span data-t="blackRem">Dés noirs retirés</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_y_black_dr" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_y_black_dr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_y_black_dr" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_y_black_dr" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
@@ -1287,7 +1312,7 @@
           <div class="fixe">
             <span><svg class="ico i-arm"><use href="#i-arm"/></svg> <b data-t="shieldBase">Bouclier de base</b></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="flat_shield" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="flat_shield" data-delta="-1" aria-label="Retirer">−</button>
               <input id="flat_shield" type="number" inputmode="numeric" value="0" min="0">
               <button class="step" data-target="flat_shield" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1299,16 +1324,16 @@
           <!-- Bleu -->
           <article class="carte" style="--c: var(--bleu); --sym: rgba(232,243,255,.92)">
             <div class="tete">
-              <div class="des" data-de="dB" data-sym="i-arm" aria-hidden="true"></div>
+              <div class="des" data-de="f_d_B" data-sym="i-arm" aria-hidden="true"></div>
               <div class="nom">
                 <strong data-t="nomDef">Dé de défense</strong>
                 <em data-t="emDef">Bleu — réduit les dégâts</em>
               </div>
               <button class="info" data-info="de-bleu" aria-label="Détail du calcul du dé de défense">i</button>
               <div class="compteur">
-                <button class="step" data-target="dB" data-delta="-1" aria-label="Retirer un dé">-</button>
-                <input id="dB" type="number" inputmode="numeric" value="0" min="0" max="3">
-                <button class="step" data-target="dB" data-delta="1" aria-label="Ajouter un dé">+</button>
+                <button class="step" data-target="f_d_B" data-delta="-1" aria-label="Retirer un dé">−</button>
+                <input id="f_d_B" type="number" inputmode="numeric" value="0" min="0" max="3">
+                <button class="step" data-target="f_d_B" data-delta="1" aria-label="Ajouter un dé">+</button>
               </div>
             </div>
             <div class="faces">
@@ -1327,15 +1352,15 @@
               <div class="special-grille">
                 <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="reduction">Réduction</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_blue_s" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_blue_s" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_blue_s" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_blue_s" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="annulation">Annulation</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_blue_c" data-delta="-1" aria-label="Retirer">-</button>
-                    <input id="s_blue_c" type="number" inputmode="numeric" value="0" min="0" max="1">
+                    <button class="step" data-target="s_blue_c" data-delta="-1" aria-label="Retirer">−</button>
+                    <input id="s_blue_c" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_blue_c" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
@@ -1346,16 +1371,16 @@
           <!-- Noir -->
           <article class="carte" style="--c: var(--noir); --sym: rgba(232,228,255,.92)">
             <div class="tete">
-              <div class="des" data-de="dN" data-sym="i-esq" aria-hidden="true"></div>
+              <div class="des" data-de="f_d_N" data-sym="i-esq" aria-hidden="true"></div>
               <div class="nom">
                 <strong data-t="nomEsq">Dé d'esquive</strong>
                 <em data-t="emEsq">Noir — une face annule toute l'attaque</em>
               </div>
               <button class="info" data-info="de-noir" aria-label="Détail du calcul du dé d'esquive">i</button>
               <div class="compteur">
-                <button class="step" data-target="dN" data-delta="-1" aria-label="Retirer un dé">-</button>
-                <input id="dN" type="number" inputmode="numeric" value="0" min="0" max="3">
-                <button class="step" data-target="dN" data-delta="1" aria-label="Ajouter un dé">+</button>
+                <button class="step" data-target="f_d_N" data-delta="-1" aria-label="Retirer un dé">−</button>
+                <input id="f_d_N" type="number" inputmode="numeric" value="0" min="0" max="3">
+                <button class="step" data-target="f_d_N" data-delta="1" aria-label="Ajouter un dé">+</button>
               </div>
             </div>
             <div class="faces">
@@ -1374,15 +1399,15 @@
               <div class="special-grille">
                 <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="reduction">Réduction</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_black_s" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_black_s" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_black_s" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_black_s" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
                 <label class="mini"><span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="annulation">Annulation</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_black_c" data-delta="-1" aria-label="Retirer">-</button>
-                    <input id="s_black_c" type="number" inputmode="numeric" value="0" min="0" max="1">
+                    <button class="step" data-target="s_black_c" data-delta="-1" aria-label="Retirer">−</button>
+                    <input id="s_black_c" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_black_c" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
@@ -1407,7 +1432,7 @@
           <div class="seuil">
             <span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="failAt">Échec à</span></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="sFA" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="sFA" data-delta="-1" aria-label="Retirer">−</button>
               <input id="sFA" type="number" inputmode="numeric" value="2" min="1">
               <button class="step" data-target="sFA" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1415,7 +1440,7 @@
           <div class="seuil">
             <span><svg class="ico i-ok"><use href="#i-ok"/></svg> <span data-t="contUnder">Relancer sous</span></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="sCU" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="sCU" data-delta="-1" aria-label="Retirer">−</button>
               <input id="sCU" type="number" inputmode="numeric" value="1" min="1">
               <button class="step" data-target="sCU" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1423,7 +1448,7 @@
           <div class="seuil">
             <span><svg class="ico i-ok"><use href="#i-ok"/></svg> <span data-t="stopAt">Arrêt à</span></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="sSA" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="sSA" data-delta="-1" aria-label="Retirer">−</button>
               <input id="sSA" type="number" inputmode="numeric" value="2" min="2">
               <button class="step" data-target="sSA" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1431,7 +1456,7 @@
           <div class="seuil">
             <span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="marge">Marge</span></span>
             <div class="compteur compteur--mini">
-              <button class="step" data-target="sM" data-delta="-1" aria-label="Retirer">-</button>
+              <button class="step" data-target="sM" data-delta="-1" aria-label="Retirer">−</button>
               <input id="sM" type="number" inputmode="numeric" value="1" min="1" max="2">
               <button class="step" data-target="sM" data-delta="1" aria-label="Ajouter">+</button>
             </div>
@@ -1450,7 +1475,7 @@
               </div>
               <button class="info" data-info="de-blanc" aria-label="Détail du calcul du dé de compétence">i</button>
               <div class="compteur">
-                <button class="step" data-target="s_d_w" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <button class="step" data-target="s_d_w" data-delta="-1" aria-label="Retirer un dé">−</button>
                 <input id="s_d_w" type="number" inputmode="numeric" value="2" min="1" max="5">
                 <button class="step" data-target="s_d_w" data-delta="1" aria-label="Ajouter un dé">+</button>
               </div>
@@ -1471,7 +1496,7 @@
               <div class="special-grille">
                 <label class="mini"><span><svg class="ico i-ok"><use href="#i-ok"/></svg> <span data-t="reussites">Réussites</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_s_w" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_s_w" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_s_w" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_s_w" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
@@ -1489,7 +1514,7 @@
               </div>
               <button class="info" data-info="de-difficulte" aria-label="Détail du calcul du dé de difficulté">i</button>
               <div class="compteur">
-                <button class="step" data-target="s_d_b" data-delta="-1" aria-label="Retirer un dé">-</button>
+                <button class="step" data-target="s_d_b" data-delta="-1" aria-label="Retirer un dé">−</button>
                 <input id="s_d_b" type="number" inputmode="numeric" value="2" min="1" max="3">
                 <button class="step" data-target="s_d_b" data-delta="1" aria-label="Ajouter un dé">+</button>
               </div>
@@ -1510,7 +1535,7 @@
               <div class="special-grille">
                 <label class="mini"><span><svg class="ico i-ko"><use href="#i-ko"/></svg> <span data-t="echecs">Échecs</span></span>
                   <div class="compteur compteur--mini">
-                    <button class="step" data-target="s_s_b" data-delta="-1" aria-label="Retirer">-</button>
+                    <button class="step" data-target="s_s_b" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_s_b" type="number" inputmode="numeric" value="0" min="0">
                     <button class="step" data-target="s_s_b" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
@@ -1639,7 +1664,7 @@ function dFightBlack(spe) {
 
 function rollFight(fightFlat, fightNbR, fightR, fightNbY, fightY,
                    fightNbBlue, fightBlue, fightNbBlack, fightBlack,
-                   fightbaseBouclier) {
+                   fightBaseShield) {
   let cumulativeDamage = new Map();
   cumulativeDamage.set(key(fightFlat), 1.0);
 
@@ -1653,7 +1678,7 @@ function rollFight(fightFlat, fightNbR, fightR, fightNbY, fightY,
       damageKey.split(",").map(Number);
 
     let cumulativeDefense = new Map();
-    cumulativeDefense.set(key([fightbaseBouclier || 0, 0]), 1.0);
+    cumulativeDefense.set(key([fightBaseShield || 0, 0]), 1.0);
 
     const nbBlue = fightNbBlue - blueDiceRed;
     const nbBlack = fightNbBlack - blackDiceRed;
@@ -1748,10 +1773,10 @@ function computeFight() {
 
   return rollFight(
     flat,
-    num("dR"), dFightR(rSpe),
-    num("dJ"), dFightY(ySpe),
-    num("dB"), dFightBlue(blueSpe),
-    num("dN"), dFightBlack(blackSpe),
+    num("f_d_R"), dFightR(rSpe),
+    num("f_d_J"), dFightY(ySpe),
+    num("f_d_B"), dFightBlue(blueSpe),
+    num("f_d_N"), dFightBlack(blackSpe),
     num("flat_shield")
   );
 }
@@ -2137,19 +2162,34 @@ function cubeHTML(sym) {
     + '<use href="#' + sym + '" width="100" height="100"/></g>'
     + '<g class="sym-cote" transform="matrix(0.13,0.0713,0,0.155,8.5,20.8)">'
     + '<use href="#' + sym + '" width="100" height="100"/></g>'
-    + '<polygon class="brillance" points="25,4 46,15.5 25,27" opacity=".14"/>'
-    + '<path class="arete" d="M25,4 L46,15.5 L46,38.5 L25,50 L4,38.5 L4,15.5 Z'
-    + ' M25,27 L25,50 M25,27 L4,15.5 M25,27 L46,15.5"/>'
     + '</svg>';
+}
+
+function dodecHTML(sym){
+  return '<svg class="de" viewBox="-1, -1, 2, 2" height="50" width="50" aria-hidden="true">'
+  + '<polygon class="f-haut" points="0.5,0.3633 0.5,-0.3633 -0.191,-0.5878 -0.618,0 -0.191,0.5878" />'
+  + '<polygon class="f-gauche" points="0.5,0.3633 0.5,-0.3633 0.809,-0.5878 1,0 0.809,0.5878" />'
+  + '<polygon class="f-gauche" points="0.5,0.3633 0.809,0.5878 0.309,0.9511 -0.309,0.9511 -0.191,0.5878" />'
+  + '<polygon class="f-droite" points="0.5,-0.3633 0.809,-0.5878 0.309,-0.9511 -0.309,-0.9511 -0.191,-0.5878" />'
+  + '<polygon class="f-droite" points="-0.618,0 -1,0 -0.809,-0.5878 -0.309,-0.9511 -0.191,-0.5878" />'
+  + '<polygon class="f-gauche" points="-0.618,0 -1,0 -0.809,0.5878 -0.309,0.9511 -0.191,0.5878" />'
+  + '<g class="sym" transform="scale(0.006) translate(-60, -36) rotate(-15)">'
+  + '<use href="#' + sym + '" width="100" height="100"/></g>'
+  + '</svg>'
 }
 
 function dessinerDes(conteneur, nb, effet) {
   const sym = conteneur.dataset.sym;
   const vus = Math.min(Math.max(nb, 1), DES_MAX);
+  let deHTML = cubeHTML.bind();
+  if (conteneur.dataset.de.startsWith("s_d")){
+    deHTML = dodecHTML.bind();
+  }
+
   let html = "";
   for (let i = 0; i < vus; i++) {
     html += '<span class="de-slot" style="--i:' + i + ';--rot:' + DES_ROT[i % DES_ROT.length] + 'deg">'
-          + cubeHTML(sym) + '</span>';
+          + deHTML(sym) + '</span>';
   }
   if (nb > DES_MAX) html += '<span class="des-compte">×' + nb + '</span>';
   conteneur.innerHTML = html;
@@ -2245,7 +2285,7 @@ function basculer(vers, silencieux) {
 document.getElementById("fightBtn").addEventListener("click", () => basculer("fight"));
 document.getElementById("skillBtn").addEventListener("click", () => basculer("skill"));
 
-/* ---------- Boutons + / - ---------- */
+/* ---------- Boutons + / − ---------- */
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".step");
   if (!btn) return;
@@ -2411,9 +2451,7 @@ const TRAD = {
     legExactS: "Probabilité d'obtenir exactement ce nombre de réussites.",
     fermer: "Fermer", replierAria: "Replier le graphique", deplierAria: "Déplier le graphique",
     brut: "Dégâts bruts", reducAdv: "Réduction adverse", reducEff: "Réduction effective",
-    dontBaseDegat: "dont {n} dégats de base",
-    dontBaseBouclier: "dont {n} de bouclier de base",
-    dontBasePerceArmure: "dont {n} perce-armure de base",
+    dontBase: "dont {n} de bouclier de base",
     finalDmg: "Dégâts infligés", esquive: "Esquive !",
     aucunDe: "Aucun dé sélectionné pour ce lancer.",
     desRetires: "{n} dé(s) de défense retiré(s) avant le lancer.",
@@ -2450,9 +2488,7 @@ const TRAD = {
     legExactS: "Chance to score exactly this many successes.",
     fermer: "Close", replierAria: "Collapse the chart", deplierAria: "Expand the chart",
     brut: "Raw damage", reducAdv: "Enemy reduction", reducEff: "Effective reduction",
-    dontBaseDegat: "including {n} from the base damage",
-    dontBaseBouclier: "including {n} from the base shield",
-    dontBasePerceArmure: "including {n} from the base armor piercing",
+    dontBase: "including {n} from the base shield",
     finalDmg: "Damage dealt", esquive: "Dodged!",
     aucunDe: "No dice selected for this roll.",
     desRetires: "{n} defence die/dice removed before the roll.",
@@ -2522,7 +2558,7 @@ const AIDE_FR = {
         <li>Les dés d'attaque et de puissance sont combinés entre eux, avec les bonus permanents : on obtient la distribution des <strong>dégâts bruts</strong>, du perce-armure et des dés de défense retirés.</li>
         <li>Les dés de défense retirés sont soustraits du nombre de dés adverses, <strong>avant</strong> que l'adversaire ne lance.</li>
         <li>Le <strong>bouclier de base</strong> de l'adversaire et ses dés de défense et d'esquive restants sont combinés : on obtient une <strong>réduction totale</strong> et une éventuelle annulation.</li>
-        <li>Dégâts finaux = dégâts bruts - (réduction - perce-armure). Le résultat ne descend jamais sous 0, et une annulation le met directement à 0.</li>
+        <li>Dégâts finaux = dégâts bruts − (réduction − perce-armure). Le résultat ne descend jamais sous 0, et une annulation le met directement à 0.</li>
       </ol>
       <div class="aide-note">Le nombre de combinaisons grandit vite avec le nombre de dés. Au-delà d'une dizaine, le calcul peut prendre un instant avant que la courbe ne se mette à jour.</div>`
   },
@@ -2539,7 +2575,7 @@ const AIDE_FR = {
       <div class="exemple">
         <b>Exemple</b>
         Tu infliges 3 dégâts bruts, l'adversaire obtient 2 de réduction et tu as 1 de perce-armure.<br>
-        <span class="calc">réduction effective = 2 - 1 = 1 → dégâts = 3 - 1 = 2</span>
+        <span class="calc">réduction effective = 2 − 1 = 1 → dégâts = 3 − 1 = 2</span>
       </div>
       <p>Le perce-armure ne crée jamais de dégâts supplémentaires : si la réduction tombe à 0, le surplus est perdu.</p>`
   },
@@ -2576,7 +2612,7 @@ const AIDE_FR = {
       <div class="exemple">
         <b>Exemple</b>
         Bouclier de base 2, un dé bleu donne 1, tu as 1 de perce-armure, tes dégâts bruts valent 5.<br>
-        <span class="calc">réduction = 2 + 1 = 3 → effective = 3 - 1 = 2 → dégâts = 5 - 2 = 3</span>
+        <span class="calc">réduction = 2 + 1 = 3 → effective = 3 − 1 = 2 → dégâts = 5 − 2 = 3</span>
       </div>
       <p>Contrairement aux dés, ce bouclier est là à tous les coups : il décale toute la courbe vers la gauche au lieu de l'étaler. C'est ce qui rend les petites attaques inutiles face à un adversaire bien protégé.</p>
       <div class="aide-note">À 0, le calcul est exactement celui d'avant : seule la défense lancée compte.</div>`
@@ -2591,7 +2627,7 @@ const AIDE_FR = {
       <div class="exemple">
         <b>Exemple</b>
         Deux dés bleus donnent 1 et 2, tu as 1 de perce-armure, tes dégâts bruts valent 4.<br>
-        <span class="calc">réduction = 1 + 2 = 3 → effective = 3 - 1 = 2 → dégâts = 4 - 2 = 2</span>
+        <span class="calc">réduction = 1 + 2 = 3 → effective = 3 − 1 = 2 → dégâts = 4 − 2 = 2</span>
       </div>
       <p>La face spéciale peut porter une réduction, mais aussi une <strong>annulation</strong> : dans ce cas les dégâts tombent à 0 sans passer par la soustraction.</p>`
   },
@@ -2604,8 +2640,8 @@ const AIDE_FR = {
       <p>L'esquive ne réduit pas, elle <strong>annule</strong>. Dès qu'un seul dé tombe dessus, les dégâts valent 0, quels que soient tes dés d'attaque et ton perce-armure. C'est le seul effet du jeu qui court-circuite tout le reste du calcul.</p>
       <div class="exemple">
         <b>Risque d'esquive</b>
-        <span class="calc">1 - (5 ÷ 6)<sup>N</sup></span> avec N dés noirs :<br>
-        1 dé → 16,7 %　·　2 dés → 30,6 %  ·　3 dés → 42,1 %
+        <span class="calc">1 − (5 ÷ 6)<sup>N</sup></span> avec N dés noirs :<br>
+        1 dé → 16,7 %　·　2 dés → 30,6 %　·　3 dés → 42,1 %
       </div>
       <p>C'est pourquoi ajouter un dé d'esquive écrase toute la courbe : la probabilité de 0 dégât grimpe d'un coup, et toutes les autres barres sont rabotées dans la même proportion.</p>`
   },
@@ -2675,7 +2711,7 @@ const AIDE_EN = {
         <li>Attack and power dice are combined together with the permanent bonuses, giving the distribution of <strong>raw damage</strong>, armour piercing and removed defence dice.</li>
         <li>Removed defence dice are subtracted from the enemy's pool <strong>before</strong> they roll.</li>
         <li>The enemy's <strong>base shield</strong> and its remaining defence and dodge dice are combined into a <strong>total reduction</strong>, plus a possible cancel.</li>
-        <li>Final damage = raw damage - (reduction - armour piercing). The result never drops below 0, and a cancel sends it straight to 0.</li>
+        <li>Final damage = raw damage − (reduction − armour piercing). The result never drops below 0, and a cancel sends it straight to 0.</li>
       </ol>
       <div class="aide-note">The number of combinations grows fast with the number of dice. Beyond a dozen, the curve may take a moment to refresh.</div>`
   },
@@ -2692,7 +2728,7 @@ const AIDE_EN = {
       <div class="exemple">
         <b>Example</b>
         You deal 3 raw damage, the enemy gets 2 reduction and you have 1 armour piercing.<br>
-        <span class="calc">effective reduction = 2 - 1 = 1 → damage = 3 - 1 = 2</span>
+        <span class="calc">effective reduction = 2 − 1 = 1 → damage = 3 − 1 = 2</span>
       </div>
       <p>Armour piercing never creates extra damage: once the reduction hits 0, the surplus is lost.</p>`
   },
@@ -2729,7 +2765,7 @@ const AIDE_EN = {
       <div class="exemple">
         <b>Example</b>
         Base shield 2, one blue die shows 1, you have 1 armour piercing, your raw damage is 5.<br>
-        <span class="calc">reduction = 2 + 1 = 3 → effective = 3 - 1 = 2 → damage = 5 - 2 = 3</span>
+        <span class="calc">reduction = 2 + 1 = 3 → effective = 3 − 1 = 2 → damage = 5 − 2 = 3</span>
       </div>
       <p>Unlike dice, this shield is there every single time: it shifts the whole curve left instead of spreading it. That is what makes small attacks pointless against a well-protected enemy.</p>
       <div class="aide-note">At 0, the maths are exactly what they were before: only rolled defence counts.</div>`
@@ -2744,7 +2780,7 @@ const AIDE_EN = {
       <div class="exemple">
         <b>Example</b>
         Two blue dice show 1 and 2, you have 1 armour piercing, your raw damage is 4.<br>
-        <span class="calc">reduction = 1 + 2 = 3 → effective = 3 - 1 = 2 → damage = 4 - 2 = 2</span>
+        <span class="calc">reduction = 1 + 2 = 3 → effective = 3 − 1 = 2 → damage = 4 − 2 = 2</span>
       </div>
       <p>The special face can carry reduction, but also a <strong>cancel</strong>: damage then drops to 0 without going through the subtraction.</p>`
   },
@@ -2757,7 +2793,7 @@ const AIDE_EN = {
       <p>A dodge does not reduce, it <strong>cancels</strong>. The moment a single die lands on it, damage is 0 whatever your attack dice and armour piercing did. It is the one effect that short-circuits the entire calculation.</p>
       <div class="exemple">
         <b>Dodge risk</b>
-        <span class="calc">1 - (5 ÷ 6)<sup>N</sup></span> with N black dice:<br>
+        <span class="calc">1 − (5 ÷ 6)<sup>N</sup></span> with N black dice:<br>
         1 die → 16.7 %　·　2 dice → 30.6 %　·　3 dice → 42.1 %
       </div>
       <p>That is why adding one dodge die flattens the whole curve: the chance of 0 damage jumps at once, and every other bar is shaved by the same proportion.</p>`
@@ -2864,10 +2900,24 @@ function creerDe(type, index, delai) {
   cube.style.setProperty("--c", def.c);
   cube.style.setProperty("--sym", def.sym);
   def.faces.forEach((html, i) => {
-    const f = document.createElement("div");
-    f.className = "f3d v" + (i + 1);
-    f.innerHTML = html;
-    cube.appendChild(f);
+    const mode = document.getElementById("bascule").getAttribute("data-mode");
+    if (mode == "skill"){
+      // les dés 12 de skill ont toutes leurs faces doublées. on utilisé cette astuce pour les représentés.
+      const f = document.createElement("div");
+      f.className = "fd3d v" + (i + 1);
+      f.innerHTML = html;
+      cube.appendChild(f);
+      const f2 = document.createElement("div");
+      f2.className = "fd3d v" + (i + 7);
+      f2.innerHTML = html;
+      cube.appendChild(f2);
+    } else {
+      const f = document.createElement("div");
+      f.className = "f3d v" + (i + 1);
+      f.innerHTML = html;
+      cube.appendChild(f);
+    }
+
   });
   scene.appendChild(cube);
   jet.appendChild(scene);
@@ -2948,24 +2998,22 @@ async function jouerCombat() {
   };
 
   let degats = flat[0], perce = flat[1], retBleu = flat[2], retNoir = flat[3];
-  const baseDegat = degats;
-  const basePerce = perce;
   const att = [];
-  for (let i = 0; i < num("dR"); i++) {
+  for (let i = 0; i < num("f_d_R"); i++) {
     const k = d6(); att.push(["rouge", k]);
     const e = EFF.rouge[k]; degats += e[0]; perce += e[1]; retBleu += e[2]; retNoir += e[3];
   }
-  for (let i = 0; i < num("dJ"); i++) {
+  for (let i = 0; i < num("f_d_J"); i++) {
     const k = d6(); att.push(["jaune", k]);
     const e = EFF.jaune[k]; degats += e[0]; perce += e[1]; retBleu += e[2]; retNoir += e[3];
   }
 
-  const nbBleu = Math.max(0, num("dB") - retBleu);
-  const nbNoir = Math.max(0, num("dN") - retNoir);
-  const retires = Math.max(0, num("dB") - nbBleu) + Math.max(0, num("dN") - nbNoir);
+  const nbBleu = Math.max(0, num("f_d_B") - retBleu);
+  const nbNoir = Math.max(0, num("f_d_N") - retNoir);
+  const retires = Math.max(0, num("f_d_B") - nbBleu) + Math.max(0, num("f_d_N") - nbNoir);
 
-  const baseBouclier = num("flat_shield");
-  let reduction = baseBouclier, annule = 0;
+  const base = num("flat_shield");
+  let reduction = base, annule = 0;
   const def = [];
   for (let i = 0; i < nbBleu; i++) {
     const k = d6(); def.push(["bleu", k]);
@@ -2991,19 +3039,13 @@ async function jouerCombat() {
 
   let html = "";
   if (annule > 0) html += `<div class="bandeau-esquive">${t("esquive")}</div>`;
-  
-  const detailDegat = baseDegat > 0 ? ` <small>(${t("dontBaseDegat", { n: baseDegat })})</small>` : "";
-  html += `<div class="bilan-ligne"><span>${t("brut")}${detailDegat}</span><b>${degats}</b></div>`;
-
+  html += `<div class="bilan-ligne"><span>${t("brut")}</span><b>${degats}</b></div>`;
   if (reduction > 0 || perce > 0) {
-    const detailBouclier = baseBouclier > 0 ? ` <small>(${t("dontBaseBouclier", { n: baseBouclier })})</small>` : "";
-    html += `<div class="bilan-ligne"><span>${t("reducAdv")}${detailBouclier}</span><b>-${reduction}</b></div>`;
+    const detail = base > 0 ? ` <small>(${t("dontBase", { n: base })})</small>` : "";
+    html += `<div class="bilan-ligne"><span>${t("reducAdv")}${detail}</span><b>−${reduction}</b></div>`;
   }
-  if (perce > 0) {
-    const detailPerceArmure = basePerce > 0 ? ` <small>(${t("dontBasePerceArmure", { n: basePerce })})</small>` : "";
-    html += `<div class="bilan-ligne"><span>${t("pa")}${detailPerceArmure}</span><b>+${perce}</b></div>`;
-  }
-  if (reduction > 0 || perce > 0) html += `<div class="bilan-ligne"><span>${t("reducEff")}</span><b>-${effective}</b></div>`;
+  if (perce > 0) html += `<div class="bilan-ligne"><span>${t("pa")}</span><b>+${perce}</b></div>`;
+  if (reduction > 0 || perce > 0) html += `<div class="bilan-ligne"><span>${t("reducEff")}</span><b>−${effective}</b></div>`;
   html += `<div class="bilan-total"><span>${t("finalDmg")}</span><b data-n="${total}">0</b></div>`;
   afficherBilan(html, false);
 }
