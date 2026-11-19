@@ -795,17 +795,16 @@
   .fd3d {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center; gap: 3px;
-    border-radius: 10px;
     background: linear-gradient(152deg,
       color-mix(in srgb, var(--c) 86%, #ffffff 14%),
       color-mix(in srgb, var(--c) 64%, #000000 36%));
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.42), inset 0 2px 0 rgba(255,255,255,.30);
+    
     color: var(--sym);
     font-weight: 700; font-size: calc(var(--d) * .30);
     font-variant-numeric: tabular-nums;
     clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);;
   }
-  .fc3d .ico { width: calc(var(--d) * .30); height: calc(var(--d) * .30); }
+  .fc3d .ico { width: calc(var(--d) * .8); height: calc(var(--d) * .80); }
   .fc3d.v1 { transform:  translateZ(calc(var(--d) / 2)); }
   .fc3d.v2 { transform:  rotateY(180deg) translateZ(calc(var(--d) / 2)); }
   .fc3d.v3 { transform:  rotateY(90deg)  translateZ(calc(var(--d) / 2)); }
@@ -813,19 +812,20 @@
   .fc3d.v5 { transform:  rotateX(90deg)  translateZ(calc(var(--d) / 2)); }
   .fc3d.v6 { transform:  rotateX(-90deg) translateZ(calc(var(--d) / 2)); }
 
-  .fd3d .ico { width: calc(var(--d) * .30); height: calc(var(--d) * .30); }
-  .fd3d.v1 { transform:  translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v2 { transform:  rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v3 { transform: rotateZ(72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v4 { transform: rotateZ(144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v5 { transform: rotateZ(-72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v6 { transform: rotateZ(-144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v7 { transform: rotateX(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v8 { transform: rotateX(180deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v9 { transform: rotateX(180deg) rotateZ(72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v10 { transform: rotateX(180deg) rotateZ(144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v11 { transform: rotateX(180deg) rotateZ(-72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
-  .fd3d.v12 { transform: rotateX(180deg) rotateZ(-144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.58)); }
+  .fd3d .ico { width: calc(var(--d) * .40); height: calc(var(--d) * .80); }
+  .fd3d.v1 { transform:  translateZ(calc(var(--d) / 1.55)); }
+  .fd3d.v2 { transform:  rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.55)); }
+  .fd3d.v3 { transform: rotateZ(72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.55)); }
+  .fd3d.v4 { transform: rotateZ(144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.55)); }
+  .fd3d.v5 { transform: rotateZ(-72deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.55)); }
+  .fd3d.v6 { transform: rotateZ(-144deg) rotateX(-64deg) rotateZ(180deg) translateZ(calc(var(--d) / 1.55)); }
+  .fd3d.v7 { transform: rotateX(180deg) translateZ(calc(var(--d) / 1.55))  }
+  .fd3d.v8 { transform: rotateX(-64deg) translateZ(calc( var(--d) / -1.55)) rotateY(180deg); }
+  .fd3d.v9 { transform: rotateZ(72deg) rotateX(-64deg) translateZ(calc( var(--d) / -1.55)) rotateY(180deg); }
+  .fd3d.v10 { transform: rotateZ(144deg) rotateX(-64deg) translateZ(calc( var(--d) / -1.55)) rotateY(180deg); }
+  .fd3d.v11 { transform: rotateZ(-72deg) rotateX(-64deg) translateZ(calc( var(--d) / -1.55)) rotateY(180deg); }
+  .fd3d.v12 { transform: rotateZ(-144deg) rotateX(-64deg) translateZ(calc( var(--d) / -1.55)) rotateY(180deg); }
+  
 
   .jet.pose .scene3d { animation:5pose .5s cubic-bezier(.3,1.4,.5,1); }
   @keyframes pose {
@@ -936,10 +936,38 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <symbol id="i-dmg" viewBox="0 0 100 100">
-      <polygon fill="currentColor" points="50,0 61,31 91,17 77,47 100,50 77,53 91,83 61,69 50,100 39,69 9,83 23,53 0,50 23,47 9,17 39,31"/>
+      <polygon id="s-dmg" fill="currentColor" points="50,0 61,31 91,17 77,47 100,50 77,53 91,83 61,69 50,100 39,69 9,83 23,53 0,50 23,47 9,17 39,31"/>
+    </symbol>
+    <symbol id="i-2dmg" viewBox="0 0 180 180">
+      <use href="#s-dmg" />
+      <use href="#s-dmg" transform="translate(90, 90)" />
+    </symbol>
+    <symbol id="i-3dmg" viewBox="0 0 180 180">
+      <use href="#s-dmg" transform="translate(0, 90)" />
+      <use href="#s-dmg" transform="translate(45, 0)" />
+      <use href="#s-dmg" transform="translate(90, 90)" />
     </symbol>
     <symbol id="i-arm" viewBox="0 0 100 100">
-      <path fill="currentColor" d="M50 3 L89 19 V49 C89 74 71 91 50 97 C29 91 11 74 11 49 V19 Z"/>
+      <path id="s-arm" fill="currentColor" d="M50 3 L89 19 V49 C89 74 71 91 50 97 C29 91 11 74 11 49 V19 Z"/>
+    </symbol>
+    <symbol id="i-2arm" viewBox="0 0 140 140">
+      <use href="#s-arm" transform="translate(0, 40)"/>
+      <mask id="2arm-mask" >
+        <rect x="0" y="0" width="140" height="140" fill="white"/>
+        <use href="#s-arm" transform="translate(-40, 40)" fill="black" stroke="black" stroke-width="10px"/>
+      </mask>
+      <use href="#s-arm" transform="translate(40, 0)" mask="url(#2arm-mask)" />
+    </symbol>
+    <symbol id="i-cross-arm" viewBox="0 0 100 100">
+      <defs>
+        <path id="s-arm-cross" d="M90 10 L10 90Z"   stroke-linejoin="round"/>
+      </defs>
+      <mask id="cross-arm-mask" >
+        <rect x="0" y="0" width="100" height="100" fill="white"/>
+        <use href="#s-arm-cross" stroke="black" stroke-width="20px"/>
+      </mask>
+      <path id="s-arm" fill="currentColor" d="M50 3 L89 19 V49 C89 74 71 91 50 97 C29 91 11 74 11 49 V19 Z" mask="url(#cross-arm-mask)" />
+      <use href="#s-arm-cross"  stroke="red" stroke-width="10px"/>
     </symbol>
     <symbol id="i-ok" viewBox="0 0 100 100">
       <path fill="currentColor" d="m6.4866 95.428c-1.8912-7.1378-2.2643-14.506-2.1701-21.854 0.16164-7.3408-0.57539-14.993 2.0448-21.996 1.9289-4.0684 10.671-2.841 8.8555 2.6633-1.6369 11.461-0.04773 23.118 2.6727 34.277 1.4818 2.7888 3.4821 7.7555-1.6747 7.1125-3.1367 0.57824-6.8587 1.858-9.7282-0.20245zm41.711 0.6849c-5.1508-2.2382-10.922-1.4081-16.37-1.7737-4.4275 1.6291-9.0932 0.14254-9.2192-5.1565-2.2287-4.65-3.2416-9.6734-3.7506-14.747-0.66347-5.8791-1.6924-11.684-1.2401-17.677-1.3504-6.6992 5.3987-9.7419 10.467-11.864 6.431-3.7202 13.968-4.3505 21.167-5.3991 6.9982 0.17977 14.085-0.37029 21.02 0.87439 4.9509 2.6469 6.9559 9.244 4.9327 14.355-1.8524 4.6657 2.9534 9.2838-1.0532 13.374-4.7084 3.929-1.3493 9.3524-3.027 14.378-1.7164 4.8639-1.7217 11.354-8.0694 12.852-4.7097 1.2743-10.163 2.028-14.857 0.78261zm23.114-2.8996c0.41312-3.4175 0.87067-9.1344 5.0781-7.9328 4.7526-2.8078 5.5433 4.3154 1.6565 6.0702-1.7133 1.6933-4.3728 2.7822-6.7346 1.8625zm2.1449-10.467c4.1592-3.227-2.2833-9.7116 2.0726-12.126 3.5823-0.88434 7.5261-0.51188 11.103-0.30037 0.95032 4.8604-1.051 10.96-6.2518 12.544-2.1064 0.61106-4.9643 1.0566-6.9235-0.11734zm4.2189-20.544c-0.42926-4.0381-0.748-7.9607 4.4277-7.5204 4.3948-1.9704 9.2131 1.6074 6.6841 6.3329-1.41 3.7569-4.1743 7.4476-8.5462 7.6506-4.3711 1.367-1.8042-4.2482-2.5656-6.463zm11.734 3.2613c2.9276-2.9265 0.72569-9.3463 3.4771-11.124 4.0401 3.1517 1.7344 8.5793-1.2894 11.592-0.80509 0.56436-2.3932 1.0365-2.1877-0.46793zm-10.242-13.376c-0.09163-4.8441-3.0847-10.653-4.6096-13.743 4.1126-1.9385 11.315-4.0884 13.995 0.91522 0.86249 3.9789 2.7409 10.938-2.2236 12.782-2.302 0.69336-4.8573 0.76348-7.1621 0.04546zm12.518-2.743c2.6544-3.9199-1.9754-10.301 0.28995-12.925 4.7926 1.6419 3.5993 8.2486 2.9957 12.11-0.44104 1.6124-3.1245 3.9484-3.2857 0.81488zm-63.429-8.1047c1.4446-3.9669 4.0929-7.4079 5.6988-11.267 1.8992-3.28 4.1961-8.5915 8.4806-5.4892 2.8304 1.1668 9.8018-1.5933 9.111 3.1452-0.16986 3.8589-0.13754 11.459-5.8086 9.9101-5.0136-0.12201-10.197 0.73347-14.489 3.255-0.80646 0.45879-2.3331 1.7247-2.9931 0.44567zm17.283-18.982c-2.6134-0.52041-7.0995-0.231-4.3711-5.571 1.5869-4.3734 4.0572-8.3329 5.6657-12.685 2.8102-4.5715 7.3979 1.4826 8.1435 4.6728 1.614 4.495-0.82081 8.9829-2.8379 12.894-1.7813 1.3821-3.2128 1.4547-6.6003 0.68947z"/>
@@ -1164,7 +1192,7 @@
             </div>
           </div>
           <div class="fixe">
-            <span><svg class="ico i-arm"><use href="#i-arm"/></svg> <b data-t="pa">Perce-armure</b></span>
+            <span><svg class="ico i-arm"><use href="#i-cross-arm"/></svg> <b data-t="pa">Perce-armure</b></span>
             <div class="compteur compteur--mini">
               <button class="step" data-target="flat_sr" data-delta="-1" aria-label="Retirer">−</button>
               <input id="flat_sr" type="number" inputmode="numeric" value="0" min="0">
@@ -1208,10 +1236,10 @@
               </div>
             </div>
             <div class="faces">
-              <span class="face pleine">1<svg class="ico"><use href="#i-dmg"/></svg></span>
-              <span class="face pleine">1<svg class="ico"><use href="#i-dmg"/></svg></span>
-              <span class="face pleine">2<svg class="ico"><use href="#i-dmg"/></svg></span>
-              <span class="face pleine">2<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-2dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-2dmg"/></svg></span>
               <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
               <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
             </div>
@@ -1228,7 +1256,7 @@
                     <button class="step" data-target="s_r_d" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
-                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-cross-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
                   <div class="compteur compteur--mini">
                     <button class="step" data-target="s_r_sr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_r_sr" type="number" inputmode="numeric" value="0" min="0">
@@ -1270,10 +1298,10 @@
             </div>
             <div class="faces">
               <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
-              <span class="face pleine">1<svg class="ico"><use href="#i-dmg"/></svg></span>
-              <span class="face pleine">2<svg class="ico"><use href="#i-dmg"/></svg></span>
-              <span class="face pleine">3<svg class="ico"><use href="#i-dmg"/></svg></span>
-              <span class="face pleine">3<svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-2dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-3dmg"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-3dmg"/></svg></span>
               <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
             </div>
             <div class="special-bloc">
@@ -1289,7 +1317,7 @@
                     <button class="step" data-target="s_y_d" data-delta="1" aria-label="Ajouter">+</button>
                   </div>
                 </label>
-                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-cross-arm"/></svg> <span data-t="pa">Perce-armure</span></span>
                   <div class="compteur compteur--mini">
                     <button class="step" data-target="s_y_sr" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_y_sr" type="number" inputmode="numeric" value="0" min="0">
@@ -1350,9 +1378,9 @@
             <div class="faces">
               <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
               <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
-              <span class="face pleine">1<svg class="ico"><use href="#i-arm"/></svg></span>
-              <span class="face pleine">1<svg class="ico"><use href="#i-arm"/></svg></span>
-              <span class="face pleine">2<svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-2arm"/></svg></span>
               <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
             </div>
             <div class="special-bloc">
@@ -1361,7 +1389,7 @@
                 <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
               </div>
               <div class="special-grille">
-                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="reduction">Réduction</span></span>
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-cross-arm"/></svg> <span data-t="reduction">Réduction</span></span>
                   <div class="compteur compteur--mini">
                     <button class="step" data-target="s_blue_s" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_blue_s" type="number" inputmode="numeric" value="0" min="0">
@@ -1398,7 +1426,7 @@
               <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
               <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
               <span class="face"><svg class="ico"><use href="#i-vide"/></svg></span>
-              <span class="face pleine">2<svg class="ico"><use href="#i-arm"/></svg></span>
+              <span class="face pleine"><svg class="ico"><use href="#i-2arm"/></svg></span>
               <span class="face annule"><svg class="ico"><use href="#i-esq"/></svg></span>
               <span class="face speciale"><svg class="ico"><use href="#i-star"/></svg></span>
             </div>
@@ -1408,7 +1436,7 @@
                 <button class="raz raz--mini" data-raz="closest:.special-bloc" aria-label="Remettre la face spéciale à zéro"><span class="tour">↺</span></button>
               </div>
               <div class="special-grille">
-                <label class="mini"><span><svg class="ico i-arm"><use href="#i-arm"/></svg> <span data-t="reduction">Réduction</span></span>
+                <label class="mini"><span><svg class="ico i-arm"><use href="#i-cross-arm"/></svg> <span data-t="reduction">Réduction</span></span>
                   <div class="compteur compteur--mini">
                     <button class="step" data-target="s_black_s" data-delta="-1" aria-label="Retirer">−</button>
                     <input id="s_black_s" type="number" inputmode="numeric" value="0" min="0">
@@ -2552,7 +2580,10 @@ function chips(couleur, faces) {
   return `<div class="faces" style="--c: var(--${couleur})">${html}</div>`;
 }
 const DMG  = '<svg class="ico"><use href="#i-dmg"/></svg>';
+const DMG2  = '<svg class="ico"><use href="#i-2dmg"/></svg>';
+const DMG3 = '<svg class="ico"><use href="#i-3dmg"/></svg>';
 const ARM  = '<svg class="ico"><use href="#i-arm"/></svg>';
+const ARM2  = '<svg class="ico"><use href="#i-2arm"/></svg>';
 const ESQ  = '<svg class="ico"><use href="#i-esq"/></svg>';
 const OK   = '<svg class="ico"><use href="#i-ok"/></svg>';
 const OK_SPE = '<svg class="ico"><use href="#i-ok-spe"/></svg>';
@@ -2887,13 +2918,13 @@ const DUREE_DE = 1500, PAS_DE = 95;
 
 const DES_DEF = {
   rouge: { c: "var(--rouge)", sym: "rgba(255,238,231,.95)",
-           faces: ["1"+DMG, "1"+DMG, "2"+DMG, "2"+DMG, STAR, STAR] },
+           faces: [DMG, DMG, DMG2, DMG2, STAR, STAR] },
   jaune: { c: "var(--jaune)", sym: "rgba(56,38,4,.82)",
-           faces: [VIDE, "1"+DMG, "2"+DMG, "3"+DMG, "3"+DMG, STAR] },
+           faces: [VIDE, DMG, DMG2, DMG3, DMG3, STAR] },
   bleu:  { c: "var(--bleu)", sym: "rgba(234,244,255,.95)",
-           faces: [VIDE, VIDE, "1"+ARM, "1"+ARM, "2"+ARM, STAR] },
+           faces: [VIDE, VIDE, ARM, ARM, ARM2, STAR] },
   noir:  { c: "var(--noir)", sym: "rgba(233,229,255,.92)",
-           faces: [VIDE, VIDE, VIDE, "2"+ARM, ESQ, STAR] },
+           faces: [VIDE, VIDE, VIDE, ARM2, ESQ, STAR] },
   blanc: { c: "var(--blanc)", sym: "rgba(44,36,22,.80)",
            faces: [VIDE, VIDE, OK, OK, OK, OK_SPE] },
   diff:  { c: "var(--noir)", sym: "rgba(233,229,255,.92)",
