@@ -780,30 +780,20 @@
     transition: transform 1.55s cubic-bezier(.13,.82,.2,1);
   }
   
-  .fc3d {
+  .fc3d, .fd3d {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center; gap: 3px;
-    border-radius: 10px;
+    backface-visibility: hidden;
     background: linear-gradient(152deg,
       color-mix(in srgb, var(--c) 86%, #ffffff 14%),
       color-mix(in srgb, var(--c) 64%, #000000 36%));
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.42), inset 0 2px 0 rgba(255,255,255,.30);
     color: var(--sym);
-    font-weight: 700; font-size: calc(var(--d) * .30);
     font-variant-numeric: tabular-nums;
   }
   .fd3d {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center; gap: 3px;
-    background: linear-gradient(152deg,
-      color-mix(in srgb, var(--c) 86%, #ffffff 14%),
-      color-mix(in srgb, var(--c) 64%, #000000 36%));
-    
-    color: var(--sym);
-    font-weight: 700; font-size: calc(var(--d) * .30);
-    font-variant-numeric: tabular-nums;
     clip-path: polygon(50% 0%, 97.6% 34.5%, 79.4% 90.5%, 20.6% 90.5%, 2.4% 34.5%);;
   }
+
   .fc3d .ico { width: calc(var(--d) * .8); height: calc(var(--d) * .80); }
   .fc3d.v1 { transform:  translateZ(calc(var(--d) / 2)); }
   .fc3d.v2 { transform:  rotateY(180deg) translateZ(calc(var(--d) / 2)); }
@@ -936,11 +926,11 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <symbol id="i-dmg" viewBox="0 0 100 100">
-      <polygon id="s-dmg" fill="currentColor" points="50,0 61,31 91,17 77,47 100,50 77,53 91,83 61,69 50,100 39,69 9,83 23,53 0,50 23,47 9,17 39,31"/>
+      <path id="s-dmg" fill="currentColor" d="M 52,2 V 39 L 65,21 58,42 83,19 65,49 84,47 66,54 95,68 69,65 82,82 63,71 79,96 56,75 54,82 50,75 47,97 44,76 37,84 38,75 11,96 31,71 11,82 29,66 23,64 28,60 23,59 29,56 7,50 26,51 23,48 h 8 l -10,-12 14,8 -21,-32 26,27 -0,-15 6,11 z"/>
     </symbol>
-    <symbol id="i-2dmg" viewBox="0 0 180 180">
+    <symbol id="i-2dmg" viewBox="0 0 170 170">
       <use href="#s-dmg" />
-      <use href="#s-dmg" transform="translate(90, 90)" />
+      <use href="#s-dmg" transform="translate(85, 85)" />
     </symbol>
     <symbol id="i-3dmg" viewBox="0 0 180 180">
       <use href="#s-dmg" transform="translate(0, 90)" />
